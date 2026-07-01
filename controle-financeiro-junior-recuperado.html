@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Financeiro">
+<meta name="application-name" content="Controle Financeiro">
+<meta name="theme-color" content="#0f1117">
+<meta name="description" content="Controle financeiro pessoal — entradas, saídas, investimentos e metas">
+<title>Controle Financeiro Pessoal</title>
+<script>
+// ── MANIFESTO PWA INLINE ── habilita "Criar atalho" e instalação no Chrome/Edge
+(function(){
+  var icons=[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%230f1117'/%3E%3Crect x='80' y='200' width='352' height='240' rx='24' fill='none' stroke='%234d9ef5' stroke-width='28'/%3E%3Cpath d='M80 260h352' stroke='%234d9ef5' stroke-width='28'/%3E%3Crect x='160' y='120' width='80' height='100' rx='16' fill='%234d9ef5'/%3E%3Crect x='272' y='120' width='80' height='100' rx='16' fill='%234d9ef5'/%3E%3Crect x='120' y='310' width='60' height='36' rx='8' fill='%236fc43a'/%3E%3Crect x='226' y='310' width='60' height='36' rx='8' fill='%236fc43a'/%3E%3Crect x='332' y='310' width='60' height='36' rx='8' fill='%23e05252'/%3E%3C/svg%3E",sizes:"512x512",type:"image/svg+xml",purpose:"any maskable"}];
+  var manifest={name:"Controle Financeiro Pessoal",short_name:"Financeiro",description:"Controle financeiro pessoal — entradas, saídas, investimentos e metas",start_url:"./",display:"standalone",background_color:"#0f1117",theme_color:"#0f1117",orientation:"any",icons:icons,categories:["finance","productivity"]};
+  var blob=new Blob([JSON.stringify(manifest)],{type:"application/json"});
+  var url=URL.createObjectURL(blob);
+  var link=document.createElement("link");
+  link.rel="manifest";link.href=url;
+  document.head.appendChild(link);
+})();
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100%;background:#0f1117;color:#f0f2f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:14px}
+input,select,button{font-family:inherit;color:inherit;font-size:inherit}
+input::placeholder{color:#555f78}
+#setupScreen{position:fixed;inset:0;background:#0f1117;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
+.setup-card{background:#181c27;border:0.5px solid rgba(255,255,255,0.1);border-radius:16px;padding:32px 28px;max-width:400px;width:100%}
+.setup-logo{width:50px;height:50px;border-radius:13px;background:#0e1f3a;border:0.5px solid #4d9ef5;display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+.setup-logo i{font-size:24px;color:#7bbcff}
+.setup-title{font-size:22px;font-weight:700;color:#f0f2f8;margin-bottom:5px}
+.setup-sub{font-size:13px;color:#8892aa;margin-bottom:26px;line-height:1.5}
+.fg{margin-bottom:16px}
+.fl{font-size:11px;color:#8892aa;margin-bottom:5px;display:block;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.fi2{width:100%;background:#1e2336;border:0.5px solid rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;color:#f0f2f8;outline:none;font-size:14px;transition:.15s}
+.fi2:focus{border-color:#4d9ef5;background:#252b3b}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.setup-btn{width:100%;padding:13px;background:#4d9ef5;border:none;border-radius:8px;color:#fff;font-size:15px;font-weight:700;margin-top:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.setup-btn:hover{background:#7bbcff;color:#0f1117}
+#mainApp{display:none;flex-direction:column;min-height:100vh}
+#mainApp.show{display:flex}
+.topbar{background:#181c27;border-bottom:0.5px solid rgba(255,255,255,0.07);padding:11px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0}
+.tb-left{display:flex;align-items:center;gap:10px}
+.app-icon{width:32px;height:32px;border-radius:9px;background:#0e1f3a;border:0.5px solid #4d9ef5;display:flex;align-items:center;justify-content:center}
+.app-icon i{font-size:17px;color:#7bbcff}
+.app-title{font-size:15px;font-weight:700;color:#f0f2f8}
+.tb-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chip{font-size:11px;color:#555f78;background:#1e2336;padding:3px 9px;border-radius:20px;border:0.5px solid rgba(255,255,255,0.07);white-space:nowrap}
+.settings-btn{background:#1e2336;border:0.5px solid rgba(255,255,255,0.13);border-radius:8px;padding:5px 9px;color:#8892aa;display:flex;align-items:center;cursor:pointer}
+.settings-btn:hover{background:#252b3b;color:#f0f2f8}
+.top-nav{background:#181c27;border-bottom:0.5px solid rgba(255,255,255,0.07);padding:0 16px;display:flex;align-items:center;gap:0;overflow-x:auto;flex-shrink:0;scrollbar-width:none}
+.top-nav::-webkit-scrollbar{display:none}
+.tnav-btn{font-size:13px;font-weight:500;padding:13px 16px;border:none;border-bottom:2px solid transparent;background:transparent;color:#555f78;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;transition:.15s;flex-shrink:0}
+.tnav-btn i{font-size:15px}
+.tnav-btn:hover{color:#f0f2f8;background:rgba(255,255,255,0.03)}
+.tnav-btn.on{color:#7bbcff;border-bottom-color:#4d9ef5;background:rgba(77,158,245,0.06)}
+.month-bar-wrap{background:#181c27;border-bottom:0.5px solid rgba(255,255,255,0.07);display:flex;align-items:center;flex-shrink:0;gap:0}
+.month-bar{padding:8px 16px;overflow-x:auto;white-space:nowrap;flex:1;scrollbar-width:none}
+.month-bar::-webkit-scrollbar{display:none}
+.salario-box{flex-shrink:0;padding:6px 14px;border-left:0.5px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:8px;background:#181c27}
+.salario-label{font-size:11px;color:#555f78;white-space:nowrap}
+.salario-input{width:110px;font-size:14px;font-weight:700;color:#7bbcff;background:#0e1f3a;border:0.5px solid #4d9ef5;border-radius:8px;padding:5px 9px;outline:none;text-align:right}
+.salario-input:focus{border-color:#7bbcff;background:#152a4a}
+.mbtn{display:inline-block;font-size:11px;padding:4px 11px;border-radius:20px;border:0.5px solid rgba(255,255,255,0.07);background:#1e2336;color:#8892aa;margin-right:5px;cursor:pointer;transition:.15s}
+.mbtn.on{background:#0e1f3a;color:#7bbcff;border-color:#4d9ef5}
+.page-wrap{flex:1;padding:20px;max-width:1000px;width:100%;margin:0 auto}
+.kg{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
+.kc{background:#1e2336;border-radius:8px;padding:13px 15px;border:0.5px solid rgba(255,255,255,0.07)}
+.kl{font-size:11px;color:#8892aa;margin-bottom:3px}
+.kv{font-size:20px;font-weight:700}
+.ks{font-size:10px;color:#555f78;margin-top:2px}
+.card{background:#181c27;border:0.5px solid rgba(255,255,255,0.07);border-radius:12px;padding:16px 18px;margin-bottom:14px}
+.card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#8892aa;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.row-actions{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.sec-label{font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;flex:1}
+.add-btn{font-size:13px;font-weight:700;border-radius:8px;padding:8px 16px;display:flex;align-items:center;gap:5px;border:0.5px solid;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:.1s}
+.add-btn:active{transform:scale(.97)}
+.pdf-btn{font-size:12px;padding:7px 13px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.13);background:#252b3b;color:#8892aa;display:flex;align-items:center;gap:5px;cursor:pointer}
+.pdf-btn:hover{background:#2d3449;color:#f0f2f8}
+.tbl-wrap{border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;overflow:hidden;margin-bottom:12px}
+.tbl-hd{display:grid;padding:8px 14px;background:#252b3b;border-bottom:0.5px solid rgba(255,255,255,0.07);font-size:11px;color:#555f78;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.tbl-row{display:grid;padding:10px 14px;align-items:center;border-bottom:0.5px solid rgba(255,255,255,0.05)}
+.tbl-row:last-child{border-bottom:none}
+.tbl-row:nth-child(even){background:rgba(255,255,255,0.02)}
+/* CAMPOS INLINE — usa oninput para captura imediata */
+.fi{background:transparent;border:none;border-bottom:0.5px solid rgba(255,255,255,0.12);color:#f0f2f8;padding:3px 0;outline:none;width:100%;font-size:13px;transition:border-color .15s}
+.fi:focus{border-bottom-color:#4d9ef5}
+.fi-obs{color:#8892aa;font-size:12px}
+.fi-obs::placeholder{color:#555f78}
+.del-btn{background:none;border:none;color:#555f78;font-size:16px;padding:2px;display:flex;align-items:center;cursor:pointer;transition:.15s}
+.del-btn:hover{color:#e05252}
+.total-row{display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding-top:10px;border-top:0.5px solid rgba(255,255,255,0.1);margin-top:4px}
+.empty{padding:28px 0;text-align:center;color:#555f78;font-size:13px;line-height:1.7}
+.empty i{font-size:30px;display:block;margin:0 auto 8px}
+.cat-tabs{display:flex;border-bottom:0.5px solid rgba(255,255,255,0.07);margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
+.cat-tabs::-webkit-scrollbar{display:none}
+.cat-tab{font-size:13px;font-weight:600;padding:11px 16px;border:none;border-bottom:2px solid transparent;background:transparent;color:#555f78;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;transition:.15s;flex-shrink:0}
+.cat-tab i{font-size:14px}
+.cat-tab:hover{color:#f0f2f8}
+.cat-tab.on{color:#f0f2f8;border-bottom-color:currentColor}
+.pbar-bg{height:5px;background:#252b3b;border-radius:3px;overflow:hidden;margin:5px 0}
+.pbar{height:100%;border-radius:3px;transition:width .4s}
+.meta-wrap{background:#1e2336;border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px 16px;margin-bottom:14px}
+.meta-header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.meta-name-in{font-size:14px;font-weight:700;background:transparent;border:none;border-bottom:0.5px solid rgba(255,255,255,0.12);color:#f0f2f8;outline:none;flex:1;min-width:120px;padding:2px 0}
+.meta-val-in{width:110px;font-size:13px;text-align:right;background:#252b3b;border:0.5px solid rgba(255,255,255,0.13);border-radius:6px;padding:5px 9px;color:#ffc36b;outline:none}
+.div-item{margin-bottom:14px;padding-bottom:14px;border-bottom:0.5px solid rgba(255,255,255,0.07)}
+.div-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.div-header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+.div-name-in{font-size:12px;font-weight:700;background:transparent;border:none;border-bottom:0.5px solid rgba(255,255,255,0.1);color:#f0f2f8;outline:none;flex:1;padding:2px 0}
+.div-val{font-size:17px;font-weight:700;margin-bottom:3px}
+.pct-in{width:46px;font-size:12px;text-align:center;background:#252b3b;border:0.5px solid rgba(255,255,255,0.13);border-radius:6px;padding:3px 5px;color:#f0f2f8;outline:none}
+.div-bank-in{font-size:12px;background:transparent;border:none;border-bottom:0.5px solid rgba(255,255,255,0.06);color:#555f78;outline:none;width:100%;margin-top:4px;padding:2px 0}
+.div-bank-in::placeholder{color:#555f78}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:640px){.two-col{grid-template-columns:1fr}}
+.alert-bar{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:flex;align-items:center;gap:8px;font-weight:500}
+.alert-bar i{font-size:16px;flex-shrink:0}
+.chart-wrap{position:relative;width:100%;height:190px}
+.ano-table{width:100%;border-collapse:collapse;font-size:13px}
+.ano-table th{text-align:left;padding:8px 6px;color:#8892aa;font-weight:600;border-bottom:0.5px solid rgba(255,255,255,0.1);font-size:11px;text-transform:uppercase}
+.ano-table td{padding:8px 6px;border-bottom:0.5px solid rgba(255,255,255,0.05)}
+.ano-table tr:hover td{background:rgba(255,255,255,0.03);cursor:pointer}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal-box{background:#181c27;border:0.5px solid rgba(255,255,255,0.13);border-radius:14px;padding:24px 22px;width:100%;max-width:380px}
+.modal-title{font-size:15px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
+.modal-close{background:none;border:none;color:#555f78;font-size:20px;cursor:pointer;display:flex}
+.modal-sub{font-size:12px;color:#8892aa;margin-bottom:20px}
+.modal-btn{width:100%;padding:12px;background:#4d9ef5;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:6px}
+.modal-btn:hover{background:#7bbcff;color:#0f1117}
+.reset-btn{width:100%;padding:10px;background:#2a0f0f;border:0.5px solid #e05252;border-radius:8px;color:#f08080;font-size:13px;cursor:pointer;margin-top:8px;font-weight:600}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#252b3b;color:#f0f2f8;padding:10px 20px;border-radius:20px;font-size:13px;z-index:9999;opacity:0;transition:opacity .3s;border:0.5px solid rgba(255,255,255,0.1);pointer-events:none;white-space:nowrap}
+/* Modal de confirmação de exclusão */
+#confirmModal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
+#confirmModal.show{display:flex}
+.confirm-box{background:#181c27;border:0.5px solid #e05252;border-radius:14px;padding:24px 22px;width:100%;max-width:360px;box-shadow:0 8px 40px rgba(224,82,82,0.25)}
+.confirm-icon{width:48px;height:48px;border-radius:12px;background:#2a0f0f;border:0.5px solid #e05252;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.confirm-icon i{font-size:24px;color:#f08080}
+.confirm-title{font-size:16px;font-weight:700;color:#f0f2f8;text-align:center;margin-bottom:6px}
+.confirm-nome{font-size:13px;color:#f08080;text-align:center;background:#2a0f0f;border-radius:8px;padding:8px 14px;margin-bottom:6px;font-weight:600;word-break:break-word}
+.confirm-valor{font-size:12px;color:#8892aa;text-align:center;margin-bottom:18px}
+.confirm-aviso{font-size:11px;color:#555f78;text-align:center;margin-bottom:18px;line-height:1.5}
+.confirm-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.confirm-cancelar{padding:11px;background:#1e2336;border:0.5px solid rgba(255,255,255,0.13);border-radius:8px;color:#f0f2f8;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+.confirm-cancelar:hover{background:#252b3b}
+.confirm-excluir{padding:11px;background:#2a0f0f;border:0.5px solid #e05252;border-radius:8px;color:#f08080;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:.15s}
+.confirm-excluir:hover{background:#3a1212;color:#ff9999}
+</style>
+</head>
+<body>
+
+<div id="setupScreen">
+  <div class="setup-card">
+    <div class="setup-logo"><i class="ti ti-wallet"></i></div>
+    <div class="setup-title">Controle financeiro</div>
+    <div class="setup-sub">Configure seu perfil para começar. Tudo fica salvo só no seu dispositivo.</div>
+    <div class="fg"><label class="fl">Seu nome</label><input class="fi2" id="sNome" placeholder="Ex: Junior" maxlength="40"></div>
+    <div class="fg"><label class="fl">Renda base mensal (R$)</label><input class="fi2" id="sRenda" type="number" min="0" placeholder="Ex: 5000"></div>
+    <div class="fg"><label class="fl">Meta de economia mensal (R$)</label><input class="fi2" id="sMeta" type="number" min="0" placeholder="Ex: 1000"></div>
+    <div class="fg">
+      <label class="fl">Divisão do saldo (%)</label>
+      <div class="frow">
+        <div><div style="font-size:11px;color:#555f78;margin-bottom:4px">Contas fixas %</div><input class="fi2" id="sPct1" type="number" min="0" max="100" value="60"></div>
+        <div><div style="font-size:11px;color:#555f78;margin-bottom:4px">Gastos variáveis %</div><input class="fi2" id="sPct2" type="number" min="0" max="100" value="20"></div>
+      </div>
+      <div style="font-size:11px;color:#555f78;margin-top:5px">O restante vai para Reserva / Pessoal automaticamente.</div>
+    </div>
+    <button class="setup-btn" onclick="iniciarApp()"><i class="ti ti-arrow-right" style="font-size:15px"></i> Começar</button>
+  </div>
+</div>
+
+<div id="mainApp">
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="app-icon"><i class="ti ti-wallet"></i></div>
+      <div class="app-title">Controle Financeiro</div>
+    </div>
+    <div class="tb-right">
+      <div class="chip" id="dateBadge"></div>
+      <div class="chip" id="userBadge"></div>
+      <button class="settings-btn" onclick="abrirCopiar()" title="Copiar dados para outros meses" style="gap:4px"><i class="ti ti-copy" style="font-size:15px"></i></button>
+      <button class="settings-btn" onclick="abrirSettings()"><i class="ti ti-settings" style="font-size:15px"></i></button>
+    </div>
+  </div>
+  
+  <!-- BOTÃO INSTALAR APP -->
+  <div id="installBtn" style="display:none;position:fixed;bottom:20px;right:20px;z-index:9998;align-items:center;gap:8px;background:#4d9ef5;color:#fff;padding:11px 18px;border-radius:24px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(77,158,245,0.5);border:none" onclick="instalarApp()">
+    <i class="ti ti-device-desktop-down" style="font-size:18px"></i> Instalar como App
+  </div>
+
+  <div class="top-nav">
+    <button class="tnav-btn on" id="tn-painel" onclick="setNav('painel')"><i class="ti ti-layout-dashboard"></i>Painel</button>
+    <button class="tnav-btn" id="tn-entradas" onclick="setNav('entradas')"><i class="ti ti-arrow-up-circle"></i>Entradas</button>
+    <button class="tnav-btn" id="tn-saidas" onclick="setNav('saidas')"><i class="ti ti-arrow-down-circle"></i>Saídas</button>
+    <button class="tnav-btn" id="tn-investimentos" onclick="setNav('investimentos')"><i class="ti ti-trending-up"></i>Investimentos</button>
+    <button class="tnav-btn" id="tn-anual" onclick="setNav('anual')"><i class="ti ti-chart-bar"></i>Anual</button>
+  </div>
+  <div class="month-bar-wrap">
+    <div class="month-bar" id="monthBar"></div>
+    <div class="salario-box">
+      <div>
+        <div class="salario-label"><i class="ti ti-wallet" style="font-size:11px;margin-right:3px;vertical-align:-1px"></i>Salário base</div>
+        <input class="salario-input" id="salarioBaseInput" type="text" placeholder="0,00" oninput="updSalarioBase(this)" onkeydown="if(event.key==='Enter'){this.blur()}" title="Digite o valor base do salário. Suporta fórmulas: ex 1500+500">
+      </div>
+    </div>
+  </div>
+  <div class="page-wrap" id="pageWrap"></div>
+</div>
+
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal-box">
+    <div class="modal-title"><span><i class="ti ti-settings" style="font-size:14px;margin-right:6px;vertical-align:-2px"></i>Configurações</span><button class="modal-close" onclick="fecharSettings()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-sub">Dados salvos localmente neste dispositivo.</div>
+    <div class="fg"><label class="fl">Nome</label><input class="fi2" id="cfgNome" maxlength="40"></div>
+    <div class="fg"><label class="fl">Renda base (R$)</label><input class="fi2" id="cfgRenda" type="number" min="0"></div>
+    <div class="fg"><label class="fl">Meta mensal padrão (R$)</label><input class="fi2" id="cfgMeta" type="number" min="0"></div>
+    <button class="modal-btn" onclick="salvarSettings()"><i class="ti ti-check" style="font-size:14px"></i> Salvar</button>
+    <button class="reset-btn" onclick="resetarDados()"><i class="ti ti-trash" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i>Apagar todos os dados</button>
+  </div>
+</div>
+
+
+<!-- MODAL COPIAR MESES -->
+<div class="modal-overlay" id="copiarModal">
+  <div class="modal-box" style="max-width:440px">
+    <div class="modal-title">
+      <span><i class="ti ti-copy" style="font-size:14px;margin-right:6px;vertical-align:-2px"></i>Copiar dados para outros meses</span>
+      <button class="modal-close" onclick="fecharCopiar()"><i class="ti ti-x"></i></button>
+    </div>
+    <div style="font-size:12px;color:#8892aa;margin-bottom:16px;line-height:1.6">Selecione o que copiar do mês atual e para quais meses aplicar. Os valores existentes nos meses de destino serão substituídos.</div>
+
+    <div style="font-size:11px;font-weight:700;color:#8892aa;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">O que copiar de <span id="copiarMesOrigem" style="color:#7bbcff"></span>:</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      <label style="display:flex;align-items:center;gap:8px;background:#1e2336;border-radius:8px;padding:10px 12px;cursor:pointer;border:0.5px solid rgba(255,255,255,0.07)">
+        <input type="checkbox" id="chkEntradas" checked style="width:16px;height:16px;accent-color:#6fc43a;cursor:pointer">
+        <span style="font-size:13px;color:#a3e06a;font-weight:600"><i class="ti ti-arrow-up-circle" style="font-size:13px;margin-right:4px;vertical-align:-1px"></i>Entradas</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;background:#1e2336;border-radius:8px;padding:10px 12px;cursor:pointer;border:0.5px solid rgba(255,255,255,0.07)">
+        <input type="checkbox" id="chkFixa" checked style="width:16px;height:16px;accent-color:#e05252;cursor:pointer">
+        <span style="font-size:13px;color:#f08080;font-weight:600"><i class="ti ti-lock" style="font-size:13px;margin-right:4px;vertical-align:-1px"></i>Contas fixas</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;background:#1e2336;border-radius:8px;padding:10px 12px;cursor:pointer;border:0.5px solid rgba(255,255,255,0.07)">
+        <input type="checkbox" id="chkVariavel" checked style="width:16px;height:16px;accent-color:#f5a623;cursor:pointer">
+        <span style="font-size:13px;color:#ffc36b;font-weight:600"><i class="ti ti-arrows-shuffle" style="font-size:13px;margin-right:4px;vertical-align:-1px"></i>Variáveis</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;background:#1e2336;border-radius:8px;padding:10px 12px;cursor:pointer;border:0.5px solid rgba(255,255,255,0.07)">
+        <input type="checkbox" id="chkOutros" style="width:16px;height:16px;accent-color:#e8693a;cursor:pointer">
+        <span style="font-size:13px;color:#f0956a;font-weight:600"><i class="ti ti-dots-circle-horizontal" style="font-size:13px;margin-right:4px;vertical-align:-1px"></i>Outros gastos</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;background:#1e2336;border-radius:8px;padding:10px 12px;cursor:pointer;border:0.5px solid rgba(255,255,255,0.07)">
+        <input type="checkbox" id="chkInv" style="width:16px;height:16px;accent-color:#9d88f0;cursor:pointer">
+        <span style="font-size:13px;color:#c4b5ff;font-weight:600"><i class="ti ti-trending-up" style="font-size:13px;margin-right:4px;vertical-align:-1px"></i>Investimentos</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;background:#1e2336;border-radius:8px;padding:10px 12px;cursor:pointer;border:0.5px solid rgba(255,255,255,0.07)">
+        <input type="checkbox" id="chkDiv" style="width:16px;height:16px;accent-color:#4d9ef5;cursor:pointer">
+        <span style="font-size:13px;color:#7bbcff;font-weight:600"><i class="ti ti-layout-distribute-horizontal" style="font-size:13px;margin-right:4px;vertical-align:-1px"></i>Divisão %</span>
+      </label>
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:#8892aa;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Copiar os valores também? (ou só os nomes/categorias)</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--color-text-primary)">
+        <input type="radio" name="modoValor" id="modoNomes" value="nomes" style="accent-color:#4d9ef5;cursor:pointer">
+        <span style="color:#f0f2f8">Só nomes <span style="color:#8892aa;font-size:11px">(zera os valores)</span></span>
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+        <input type="radio" name="modoValor" id="modoTudo" value="tudo" checked style="accent-color:#4d9ef5;cursor:pointer">
+        <span style="color:#f0f2f8">Nomes + valores</span>
+      </label>
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:#8892aa;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Copiar para quais meses:</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:18px" id="mesesDestino"></div>
+
+    <div style="display:flex;gap:8px">
+      <button onclick="fecharCopiar()" style="flex:1;padding:11px;background:#1e2336;border:0.5px solid rgba(255,255,255,0.13);border-radius:8px;color:#8892aa;font-size:13px;font-weight:600;cursor:pointer">Cancelar</button>
+      <button onclick="executarCopia()" style="flex:2;padding:11px;background:#4d9ef5;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><i class="ti ti-copy" style="font-size:14px"></i> Copiar agora</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAÇÃO EXCLUSÃO -->
+<div id="confirmModal">
+  <div class="confirm-box">
+    <div class="confirm-icon"><i class="ti ti-trash"></i></div>
+    <div class="confirm-title">Excluir este item?</div>
+    <div class="confirm-nome" id="confirmNome"></div>
+    <div class="confirm-valor" id="confirmValor"></div>
+    <div class="confirm-aviso"><i class="ti ti-alert-triangle" style="font-size:13px;color:#f5a623;margin-right:4px;vertical-align:-2px"></i>Esta ação não pode ser desfeita.</div>
+    <div class="confirm-btns">
+      <button class="confirm-cancelar" onclick="fecharConfirm()"><i class="ti ti-x" style="font-size:14px;margin-right:4px;vertical-align:-2px"></i>Cancelar</button>
+      <button class="confirm-excluir" id="confirmBtnExcluir"><i class="ti ti-trash" style="font-size:14px"></i>Sim, excluir</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+var MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+var MESES_ABR=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+var SK='cfp_dados_v5', PK='cfp_perfil_v5';
+// ── RECUPERAÇÃO DE DADOS — seed automático (Junior) ──
+// Reinjeta os dados perdidos quando o link antigo (Netlify pausado) ficou inacessível.
+// Só grava se ainda não houver nada salvo neste navegador, para não sobrescrever uso futuro.
+(function(){
+  try{
+    if(!localStorage.getItem(SK)){
+      var dadosRecuperados = {"0":{"entradas":[{"id":101,"nome":"Recebimentos outros Junior","valor":3069.47,"obs":""},{"id":102,"nome":"Entrada Marketing Junior","valor":1492,"obs":""},{"id":103,"nome":"Salário Michelle","valor":0,"obs":""},{"id":104,"nome":"Atendimentos","valor":0,"obs":""},{"id":391,"nome":"Semijóias","valor":0,"obs":""}],"fixa":[{"id":105,"nome":"Aluguel ","valor":2100,"obs":""},{"id":106,"nome":"Escola Laura","valor":1100,"obs":""},{"id":107,"nome":"Luz","valor":569.1,"obs":""},{"id":108,"nome":"Minha Claro Móvel","valor":37.14,"obs":""},{"id":110,"nome":"Convênio Michelle","valor":576.44,"obs":""},{"id":111,"nome":"Atomos Ju","valor":8,"obs":""},{"id":421,"nome":"Atomos Mi","valor":22,"obs":""}],"variavel":[{"id":112,"nome":"Ofertas/Dizimos","valor":120,"obs":""},{"id":113,"nome":"Cartão de crédito (Meu)","valor":181.05,"obs":""},{"id":114,"nome":"Cartão de crédito (Riachuelo)","valor":0,"obs":""},{"id":115,"nome":"Cartão de crédito (BB)","valor":0,"obs":""},{"id":116,"nome":"Cartão de crédito (Torra)","valor":0,"obs":""},{"id":117,"nome":"Cuidados Pets","valor":48,"obs":""},{"id":118,"nome":"Transferências Michelle","valor":120,"obs":""},{"id":119,"nome":"Cantina Escolinha/ Lanche","valor":0,"obs":""},{"id":120,"nome":"Supermercado/ Padaria","valor":561.17,"obs":""},{"id":121,"nome":"Carro - IPVA / Seguros / Manut. Casa","valor":213.4,"obs":""},{"id":122,"nome":"Combustivél/ Conveniência","valor":42,"obs":""},{"id":124,"nome":"Farmácias","valor":7,"obs":""},{"id":125,"nome":"Transferências S.A São Paulo","valor":0,"obs":""},{"id":126,"nome":"Gastos com presentes","valor":129.98,"obs":""},{"id":127,"nome":"Comida de rua/ Salgaderia/ Alimentação Shopping","valor":43,"obs":""},{"id":128,"nome":"Outros gastos/ Estacionamento","valor":279.46,"obs":""},{"id":129,"nome":"Enviado para outras contas (Junior)","valor":2719,"obs":""},{"id":104,"nome":"Saídas/ Sueli","valor":0,"obs":""},{"id":105,"nome":"Entradas / Sueli","valor":0,"obs":""},{"id":109,"nome":"Acertos Semi Jóias","valor":0,"obs":""}],"outros":[{"id":110,"nome":"","valor":0,"obs":""},{"id":111,"nome":"Vestuário","valor":227.78,"obs":""},{"id":103,"nome":"Cuidados pessoais","valor":185,"obs":""},{"id":106,"nome":"Gáz","valor":100,"obs":""},{"id":107,"nome":"Mesada Laura","valor":20,"obs":""},{"id":108,"nome":"Desenvolvimento pessoal/ Cursos","valor":19.8,"obs":""},{"id":110,"nome":"","valor":0,"obs":""}],"investimentos":[{"id":112,"nome":"Reserva de emergência","valor":0,"local":"","obs":""}],"div":{"pct1":65,"pct2":20,"pct3":15,"nome1":"Contas fixas","nome2":"Gastos variáveis","nome3":"Reserva / Pessoal","banco1":"","banco2":"","banco3":""},"meta":{"valor":380,"descricao":"Meta de economia"}},"1":{"entradas":[{"id":101,"nome":"Recebimentos outros Junior","valor":1247.75,"obs":""},{"id":102,"nome":"Entrada Marketing Junior","valor":3342,"obs":""},{"id":103,"nome":"Salário Michelle","valor":0,"obs":""},{"id":104,"nome":"Atendimentos","valor":0,"obs":""},{"id":105,"nome":"Semijóias","valor":0,"obs":""}],"fixa":[{"id":106,"nome":"Aluguel ","valor":0,"obs":""},{"id":107,"nome":"Escola Laura","valor":0,"obs":""},{"id":108,"nome":"Luz","valor":0,"obs":""},{"id":109,"nome":"Convênio Michelle","valor":0,"obs":""},{"id":110,"nome":"Atomos Ju","valor":8,"obs":""},{"id":111,"nome":"Atomos Mi","valor":0,"obs":""},{"id":112,"nome":"Minha Claro Móvel","valor":0,"obs":""}],"variavel":[{"id":113,"nome":"Ofertas/Dizimos","valor":50,"obs":""},{"id":114,"nome":"Cartão de crédito (Meu)","valor":281.65,"obs":""},{"id":115,"nome":"Cartão de crédito (Riachuelo)","valor":0,"obs":""},{"id":116,"nome":"Cartão de crédito (BB)","valor":0,"obs":""},{"id":117,"nome":"Cartão de crédito (Torra)","valor":0,"obs":""},{"id":118,"nome":"Cuidados Pets","valor":56.55,"obs":""},{"id":119,"nome":"Transferências Michelle","valor":40,"obs":""},{"id":120,"nome":"Cantina Escolinha/ Lanche","valor":0,"obs":""},{"id":121,"nome":"Supermercado/ Padaria","valor":443.86,"obs":""},{"id":122,"nome":"Carro - IPVA / Seguros / Manut. Casa","valor":300,"obs":""},{"id":123,"nome":"Combustivél/ Conveniência","valor":180,"obs":""},{"id":124,"nome":"Farmácias","valor":75.49,"obs":""},{"id":125,"nome":"Transferências S.A São Paulo","valor":0,"obs":""},{"id":126,"nome":"Gastos com presentes","valor":211.9,"obs":""},{"id":127,"nome":"Comida de rua/ Salgaderia/ Alimentação Shopping","valor":271.34,"obs":""},{"id":128,"nome":"Outros gastos/ Estacionamento","valor":716.86,"obs":""},{"id":129,"nome":"Enviado para outras contas (Junior)","valor":2493,"obs":""},{"id":130,"nome":"Saídas/ Sueli","valor":0,"obs":""},{"id":131,"nome":"Entradas / Sueli","valor":0,"obs":""},{"id":132,"nome":"Acertos Semi Jóias","valor":0,"obs":""}],"outros":[{"id":133,"nome":"","valor":0,"obs":""},{"id":134,"nome":"Vestuário","valor":0,"obs":""},{"id":135,"nome":"Cuidados pessoais","valor":70,"obs":""},{"id":136,"nome":"Gáz","valor":0,"obs":""},{"id":137,"nome":"Mesada Laura","valor":20,"obs":""},{"id":138,"nome":"Desenvolvimento pessoal/ Cursos","valor":114.57,"obs":""},{"id":139,"nome":"Lazer/Cinema/Sorveteria","valor":92.2,"obs":""}],"investimentos":[{"id":124,"nome":"Reserva de emergência","valor":0,"local":"","obs":""}],"div":{"pct1":60,"pct2":20,"pct3":20,"nome1":"Contas fixas","nome2":"Gastos variáveis","nome3":"Reserva / Pessoal","banco1":"","banco2":"","banco3":""},"meta":{"valor":380,"descricao":"Meta de economia"}},"2":{"entradas":[{"id":101,"nome":"Recebimentos outros Junior","valor":1242.6,"obs":""},{"id":102,"nome":"Entrada Marketing Junior","valor":3862,"obs":""},{"id":103,"nome":"Salário Michelle","valor":0,"obs":""},{"id":104,"nome":"Atendimentos","valor":0,"obs":""},{"id":105,"nome":"Semijóias","valor":0,"obs":""}],"fixa":[{"id":151,"nome":"Aluguel ","valor":0,"obs":""},{"id":152,"nome":"Escola Laura","valor":0,"obs":""},{"id":153,"nome":"Luz","valor":0,"obs":""},{"id":154,"nome":"Convênio Michelle","valor":0,"obs":""},{"id":155,"nome":"Atomos Ju","valor":8,"obs":""},{"id":156,"nome":"Atomos Mi","valor":0,"obs":""},{"id":157,"nome":"Minha Claro Móvel","valor":0,"obs":""}],"variavel":[{"id":221,"nome":"Ofertas/Dizimos","valor":164,"obs":""},{"id":222,"nome":"Cartão de crédito (Meu)","valor":471.4,"obs":""},{"id":223,"nome":"Cartão de crédito (Riachuelo)","valor":0,"obs":""},{"id":224,"nome":"Cartão de crédito (BB)","valor":0,"obs":""},{"id":225,"nome":"Cartão de crédito (Torra)","valor":0,"obs":""},{"id":226,"nome":"Cuidados Pets","valor":0,"obs":""},{"id":227,"nome":"Transferências Michelle","valor":925,"obs":""},{"id":228,"nome":"Cantina Escolinha/ Lanche","valor":13.6,"obs":""},{"id":229,"nome":"Supermercado/ Padaria","valor":114.01,"obs":""},{"id":230,"nome":"Carro - IPVA / Seguros / Manut. Casa","valor":15.98,"obs":""},{"id":231,"nome":"Combustivél/ Conveniência","valor":0,"obs":""},{"id":232,"nome":"Farmácias","valor":0,"obs":""},{"id":233,"nome":"Transferências S.A São Paulo","valor":0,"obs":""},{"id":234,"nome":"Gastos com presentes","valor":170.99,"obs":""},{"id":235,"nome":"Comida de rua/ Salgaderia/ Alimentação Shopping","valor":30,"obs":""},{"id":236,"nome":"Outros gastos/ Estacionamento","valor":178.24,"obs":""},{"id":237,"nome":"Enviado para outras contas (Junior) ","valor":2295,"obs":""},{"id":238,"nome":"Saídas/ Sueli","valor":0,"obs":""},{"id":239,"nome":"Entradas / Sueli","valor":0,"obs":""},{"id":240,"nome":"Acertos Semi Jóias","valor":0,"obs":""}],"outros":[{"id":172,"nome":"","valor":0,"obs":""},{"id":173,"nome":"Vestuário","valor":59.9,"obs":""},{"id":174,"nome":"Cuidados pessoais","valor":0,"obs":""},{"id":175,"nome":"Gáz","valor":0,"obs":""},{"id":176,"nome":"Mesada Laura","valor":3,"obs":""},{"id":177,"nome":"Desenvolvimento pessoal/ Cursos","valor":0,"obs":""},{"id":178,"nome":"Lazer/Cinema/Sorveteria","valor":0,"obs":""}],"investimentos":[{"id":136,"nome":"Reserva de emergência","valor":0,"local":"","obs":""}],"div":{"pct1":60,"pct2":20,"pct3":20,"nome1":"Contas fixas","nome2":"Gastos variáveis","nome3":"Reserva / Pessoal","banco1":"","banco2":"","banco3":""},"meta":{"valor":380,"descricao":"Meta de economia"}},"3":{"entradas":[{"id":106,"nome":"Recebimentos outros Junior","valor":6242.15,"obs":""},{"id":107,"nome":"Entrada Marketing Junior","valor":4082.5,"obs":""},{"id":108,"nome":"Salário Michelle","valor":0,"obs":""},{"id":109,"nome":"Atendimentos","valor":0,"obs":""},{"id":110,"nome":"Semijóias","valor":0,"obs":""}],"fixa":[{"id":158,"nome":"Aluguel ","valor":1050,"obs":""},{"id":159,"nome":"Escola Laura","valor":1338,"obs":""},{"id":160,"nome":"Luz","valor":0,"obs":""},{"id":161,"nome":"Convênio Michelle","valor":0,"obs":""},{"id":162,"nome":"Atomos Ju","valor":8,"obs":""},{"id":163,"nome":"Atomos Mi","valor":0,"obs":""},{"id":164,"nome":"Minha Claro Móvel","valor":185.43,"obs":""}],"variavel":[{"id":241,"nome":"Ofertas/Dizimos","valor":50,"obs":""},{"id":242,"nome":"Cartão de crédito (Meu)","valor":304.23,"obs":""},{"id":243,"nome":"Cartão de crédito (Riachuelo)","valor":0,"obs":""},{"id":244,"nome":"Cartão de crédito (BB)","valor":0,"obs":""},{"id":245,"nome":"Cartão de crédito (Torra)","valor":0,"obs":""},{"id":246,"nome":"Cuidados Pets","valor":0,"obs":""},{"id":247,"nome":"Transferências Michelle","valor":3530.71,"obs":""},{"id":248,"nome":"Cantina Escolinha/ Lanche","valor":25,"obs":""},{"id":249,"nome":"Supermercado/ Padaria/ Açougue","valor":316.52,"obs":""},{"id":250,"nome":"Carro - IPVA / Seguros / Manut. Casa","valor":277,"obs":""},{"id":251,"nome":"Combustivél/ Conveniência","valor":108.93,"obs":""},{"id":252,"nome":"Farmácias","valor":0,"obs":""},{"id":253,"nome":"Transferências S.A São Paulo","valor":0,"obs":""},{"id":254,"nome":"Gastos com presentes","valor":159.9,"obs":""},{"id":255,"nome":"Comida de rua/ Salgaderia/ Alimentação Shopping","valor":161,"obs":""},{"id":256,"nome":"Outros gastos/ Estacionamento","valor":647.4,"obs":""},{"id":257,"nome":"Enviado para outras contas","valor":2160,"obs":""},{"id":258,"nome":"Saídas/ Sueli","valor":0,"obs":""},{"id":259,"nome":"Entradas / Sueli","valor":0,"obs":""},{"id":260,"nome":"Acertos Semi Jóias","valor":0,"obs":""}],"outros":[{"id":211,"nome":"","valor":0,"obs":""},{"id":212,"nome":"Vestuário","valor":0,"obs":""},{"id":213,"nome":"Cuidados pessoais","valor":0,"obs":""},{"id":214,"nome":"Gáz","valor":0,"obs":""},{"id":215,"nome":"Mesada Laura","valor":0,"obs":""},{"id":216,"nome":"Desenvolvimento pessoal/ Cursos","valor":50,"obs":""},{"id":217,"nome":"Lazer/Cinema/Sorveteria","valor":0,"obs":""}],"investimentos":[{"id":148,"nome":"Reserva de emergência","valor":0,"local":"","obs":""}],"div":{"pct1":60,"pct2":20,"pct3":20,"nome1":"Contas fixas","nome2":"Gastos variáveis","nome3":"Reserva / Pessoal","banco1":"","banco2":"","banco3":""},"meta":{"valor":380,"descricao":"Meta de economia"}},"4":{"entradas":[{"id":111,"nome":"Recebimentos outros Junior","valor":1216.95,"obs":""},{"id":112,"nome":"Entrada Marketing Junior","valor":1652,"obs":""},{"id":113,"nome":"Salário Michelle","valor":0,"obs":""},{"id":114,"nome":"Atendimentos","valor":0,"obs":""},{"id":115,"nome":"Semijóias","valor":0,"obs":""}],"fixa":[{"id":165,"nome":"Aluguel ","valor":1050,"obs":""},{"id":166,"nome":"Escola Laura","valor":0,"obs":""},{"id":167,"nome":"Luz","valor":0,"obs":""},{"id":168,"nome":"Convênio Michelle","valor":0,"obs":""},{"id":169,"nome":"Atomos Ju","valor":22,"obs":""},{"id":170,"nome":"Atomos Mi","valor":0,"obs":""},{"id":171,"nome":"Minha Claro Móvel","valor":0,"obs":""}],"variavel":[{"id":261,"nome":"Ofertas/Dizimos","valor":98,"obs":""},{"id":262,"nome":"Cartão de crédito (Meu)","valor":45.26,"obs":""},{"id":263,"nome":"Cartão de crédito (Riachuelo)","valor":0,"obs":""},{"id":264,"nome":"Cartão de crédito (BB)","valor":0,"obs":""},{"id":265,"nome":"Cartão de crédito (Torra)","valor":0,"obs":""},{"id":266,"nome":"Cuidados Pets","valor":0,"obs":""},{"id":267,"nome":"Transferências Michelle","valor":761,"obs":""},{"id":268,"nome":"Cantina Escolinha/ Lanche","valor":22.5,"obs":""},{"id":269,"nome":"Supermercado/ Padaria","valor":20.89,"obs":""},{"id":270,"nome":"Carro - IPVA / Seguros / Manut. Casa","valor":150,"obs":""},{"id":271,"nome":"Combustivél/ Conveniência","valor":7.68,"obs":""},{"id":272,"nome":"Farmácias","valor":7.94,"obs":""},{"id":273,"nome":"Transferências S.A São Paulo","valor":0,"obs":""},{"id":274,"nome":"Gastos com presentes","valor":89.8,"obs":""},{"id":275,"nome":"Comida de rua/ Salgaderia/ Alimentação Shopping","valor":42.59,"obs":""},{"id":276,"nome":"Outros gastos/ Estacionamento","valor":219,"obs":""},{"id":277,"nome":"Enviado para outras contas","valor":231.5,"obs":""},{"id":278,"nome":"Saídas/ Sueli","valor":0,"obs":""},{"id":279,"nome":"Entradas / Sueli","valor":0,"obs":""},{"id":280,"nome":"Acertos Semi Jóias","valor":0,"obs":""}],"outros":[{"id":250,"nome":"","valor":0,"obs":""},{"id":251,"nome":"Vestuário","valor":0,"obs":""},{"id":252,"nome":"Cuidados pessoais","valor":0,"obs":""},{"id":253,"nome":"Gáz","valor":0,"obs":""},{"id":254,"nome":"Mesada Laura","valor":70,"obs":""},{"id":255,"nome":"Desenvolvimento pessoal/ Cursos","valor":50.9,"obs":""},{"id":256,"nome":"Lazer/Cinema/Sorveteria","valor":0,"obs":""}],"investimentos":[{"id":160,"nome":"Reserva de emergência","valor":0,"local":"","obs":""}],"div":{"pct1":60,"pct2":20,"pct3":20,"nome1":"Contas fixas","nome2":"Gastos variáveis","nome3":"Reserva / Pessoal","banco1":"","banco2":"","banco3":""},"meta":{"valor":380,"descricao":"Meta de economia"}},"5":{"entradas":[{"id":116,"nome":"Recebimentos outros Junior","valor":1202.1,"obs":""},{"id":117,"nome":"Entrada Marketing Junior","valor":2752,"obs":""},{"id":118,"nome":"Salário Michelle","valor":0,"obs":""},{"id":119,"nome":"Atendimentos","valor":0,"obs":""},{"id":120,"nome":"Semijóias","valor":0,"obs":""}],"fixa":[{"id":172,"nome":"Aluguel ","valor":1050,"obs":""},{"id":173,"nome":"Escola Laura","valor":0,"obs":""},{"id":174,"nome":"Luz","valor":241.89,"obs":""},{"id":175,"nome":"Convênio Michelle","valor":0,"obs":""},{"id":176,"nome":"Atomos Ju","valor":22,"obs":""},{"id":177,"nome":"Atomos Mi","valor":0,"obs":""},{"id":178,"nome":"Minha Claro Móvel","valor":155.25,"obs":""}],"variavel":[{"id":281,"nome":"Ofertas/Dizimos","valor":230.8,"obs":""},{"id":282,"nome":"Cartão de crédito (Meu)","valor":184.34,"obs":""},{"id":283,"nome":"Cartão de crédito (Riachuelo)","valor":0,"obs":""},{"id":284,"nome":"Cartão de crédito (BB)","valor":0,"obs":""},{"id":285,"nome":"Cartão de crédito (Torra)","valor":0,"obs":""},{"id":286,"nome":"Cuidados Pets","valor":0,"obs":""},{"id":287,"nome":"Transferências Michelle","valor":174,"obs":""},{"id":288,"nome":"Cantina Escolinha/ Lanche","valor":31.5,"obs":""},{"id":289,"nome":"Supermercado/ Padaria","valor":137.65,"obs":""},{"id":290,"nome":"Carro - IPVA / Seguros / Manut. Casa","valor":150,"obs":""},{"id":291,"nome":"Combustivél/ Conveniência","valor":0,"obs":""},{"id":292,"nome":"Farmácias","valor":0,"obs":""},{"id":293,"nome":"Transferências S.A São Paulo","valor":0,"obs":""},{"id":294,"nome":"Gastos com presentes","valor":0,"obs":""},{"id":295,"nome":"Comida de rua/ Salgaderia/ Alimentação Shopping","valor":7.95,"obs":""},{"id":296,"nome":"Outros gastos/ Estacionamento","valor":77.5,"obs":""},{"id":297,"nome":"Enviado para outras contas","valor":1300,"obs":""},{"id":298,"nome":"Saídas/ Sueli","valor":0,"obs":""},{"id":299,"nome":"Entradas / Sueli","valor":0,"obs":""},{"id":300,"nome":"Acertos Semi Jóias","valor":0,"obs":""}],"outros":[{"id":289,"nome":"","valor":0,"obs":""},{"id":290,"nome":"Vestuário","valor":0,"obs":""},{"id":291,"nome":"Cuidados pessoais","valor":0,"obs":""},{"id":292,"nome":"Gáz","valor":0,"obs":""},{"id":293,"nome":"Mesada Laura","valor":40,"obs":""},{"id":294,"nome":"Desenvolvimento pessoal/ Cursos","valor":0,"obs":""},{"id":295,"nome":"Lazer/Cinema/Sorveteria","valor":0,"obs":""}],"investimentos":[{"id":172,"nome":"Reserva de emergência (Mi)","valor":261.15,"local":"Banco Inter","obs":"CC"},{"id":101,"nome":"Reserva de emergência (Ju)","valor":134,"local":"Banco Inter","obs":"CDB"}],"div":{"pct1":60,"pct2":25,"pct3":15,"nome1":"Contas fixas","nome2":"Gastos variáveis","nome3":"Reserva / Pessoal","banco1":"","banco2":"","banco3":""},"meta":{"valor":380,"descricao":"Meta de economia"}},"6":{"entradas":[{"id":121,"nome":"Recebimentos outros Junior","valor":0,"obs":""},{"id":122,"nome":"Entrada Marketing Junior","valor":0,"obs":""},{"id":123,"nome":"Salário Michelle","valor":0,"obs":""},{"id":124,"nome":"Atendimentos","valor":0,"obs":""},{"id":125,"nome":"Semijóias","valor":0,"obs":""}],"fixa":[{"id":179,"nome":"Aluguel ","valor":0,"obs":""},{"id":180,"nome":"Escola Laura","valor":0,"obs":""},{"id":181,"nome":"Luz","valor":0,"obs":""},{"id":182,"nome":"Convênio Michelle","valor":0,"obs":""},{"id":183,"nome":"Atomos Ju","valor":0,"obs":""},{"id":184,"nome":"Atomos Mi","valor":0,"obs":""},{"id":185,"nome":"","valor":0,"obs":""}],"variavel":[{"id":301,"nome":"Ofertas/Dizimos","valor":0,"obs":""},{"id":302,"nome":"Cartão de crédito (Meu)","valor":0,"obs":""},{"id":303,"nome":"Cartão de crédito (Riachuelo)","valor":0,"obs":""},{"id":304,"nome":"Cartão de crédito (BB)","valor":0,"obs":""},{"id":305,"nome":"Cartão de crédito (Torra)","valor":0,"obs":""},{"id":306,"nome":"Cuidados Pets","valor":0,"obs":""},{"id":307,"nome":"Transferências Michelle/Junior","valor":0,"obs":""},{"id":308,"nome":"Cantina Escolinha/ Lanche","valor":0,"obs":""},{"id":309,"nome":"Supermercado/ Padaria","valor":0,"obs":""},{"id":310,"nome":"Carro - IPVA / Seguros / Manut. Casa","valor":0,"obs":""},{"id":311,"nome":"Combustivél/ Conveniência","valor":0,"obs":""},{"id":312,"nome":"Farmácias","valor":0,"obs":""},{"id":313,"nome":"Transferências S.A São Paulo","valor":0,"obs":""},{"id":314,"nome":"Gastos com presentes","valor":0,"obs":""},{"id":315,"nome":"Comida de rua/ Salgaderia/ Alimentação Shopping","valor":0,"obs":""},{"id":316,"nome":"Outros gastos/ Estacionamento","valor":0,"obs":""},{"id":317,"nome":"Enviado para outras contas","valor":0,"obs":""},{"id":318,"nome":"Saídas/ Sueli","valor":0,"obs":""},{"id":319,"nome":"Entradas / Sueli","valor":0,"obs":""},{"id":320,"nome":"Acertos Semi Jóias","valor":0,"obs":""}],"outros":[{"id":328,"nome":"","valor":0,"obs":""},{"id":329,"nome":"Vestuário","valor":0,"obs":""},{"id":330,"nome":"Cuidados pessoais","valor":0,"obs":""},{"id":331,"nome":"Gáz","valor":0,"obs":""},{"id":332,"nome":"Mesada Laura","valor":0,"obs":""},{"id":333,"nome":"Desenvolvimento pessoal/ Cursos","valor":0,"obs":""},{"id":334,"nome":"Lazer/Cinema/Sorveteria","valor":0,"obs":""}],"investimentos":[{"id":184,"nome":"Reserva de emergência","valor":0,"local":"","obs":""}],"div":{"pct1":60,"pct2":20,"pct3":20,"nome1":"Contas fixas","nome2":"Gastos variáveis","nome3":"Reserva / Pessoal","banco1":"","banco2":"","banco3":""},"meta":{"valor":380,"descricao":"Meta de economia"}},"7":{"entradas":[{"id":126,"nome":"Recebimentos outros Junior","valor":0,"obs":""},{"id":127,"nome":"Entrada Marketing Junior","valor":0,"obs":""},{"id":128,"nome":"Salário Michelle","valor":0,"obs":""},{"id":129,"nome":"Atendimentos","valor":0,"obs":""},{"id":130,"nome":"Semijóias","valor":0,"obs":""}],"fixa":[{"id":186,"nome":"Aluguel ","valor":0,"obs":""},{"id":187,"nome":"Escola Laura","valor":0,"obs":""},{"id":188,"nome":"Luz","valor":0,"obs":""},{"id":189,"nome":"Convênio Michelle","valor":0,"obs":""},{"id":190,"nome":"Atomos Ju","valor":0,"obs":""},{"id":191,"nome":"Atomos Mi","valor":0,"obs":""},{"id":192,"nome":"","valor":0,"obs":""}],"variavel":[{"id":321,"nome":"Ofertas/Dizimos","valor":0,"obs":""},{"id":322,"nome":"Cartão de crédito (Meu)","valor":0,"obs":""},{"id":323,"nome":"Cartão de crédito (Riachuelo)","valor":0,"obs":""},{"id":324,"nome":"Cartão de crédito (BB)","valor":0,"obs":""},{"id":325,"nome":"Cartão de crédito (Torra)","valor":0,"obs":""},{"id":326,"nome":"Cuidados Pets","valor":0,"obs":""},{"id":327,"nome":"Transferências Michelle/Junior","valor":0,"obs":""},{"id":328,"nome":"Cantina Escolinha/ Lanche","valor":0,"obs":""},{"id":329,"nome":"Supermercado/ Padaria","valor":0,"obs":""},{"id":330,"nome":"Carro - IPVA / Seguros / Manut. Casa","valor":0,"obs":""},{"id":331,"nome":"Combustivél/ Conveniência","valor":0,"obs":""},{"id":332,"nome":"Farmácias","valor":0,"obs":""},{"id":333,"nome":"Transferências S.A São Paulo","valor":0,"obs":""},{"id":334,"nome":"Gastos com presentes","valor":0,"obs":""},{"id":335,"nome":"Comida de rua/ Salgaderia/ Alimentação Shopping","valor":0,"obs":""},{"id":336,"nome":"Outros gastos/ Estacionamento","valor":0,"obs":""},{"id":337,"nome":"Enviado para outras contas","valor":0,"obs":""},{"id":338,"nome":"Saídas/ Sueli","valor":0,"obs":""},{"id":339,"nome":"Entradas / Sueli","valor":0,"obs":""},{"id":340,"nome":"Acertos Semi Jóias","valor":0,"obs":""}],"outros":[{"id":367,"nome":"","valor":0,"obs":""},{"id":368,"nome":"Vestuário","valor":0,"obs":""},{"id":369,"nome":"Cuidados pessoais","valor":0,"obs":""},{"id":370,"nome":"Gáz","valor":0,"obs":""},{"id":371,"nome":"Mesada Laura","valor":0,"obs":""},{"id":372,"nome":"Desenvolvimento pessoal/ Cursos","valor":0,"obs":""},{"id":373,"nome":"Lazer/Cinema/Sorveteria","valor":0,"obs":""}],"investimentos":[{"id":196,"nome":"Reserva de emergência","valor":0,"local":"","obs":""}],"div":{"pct1":60,"pct2":20,"pct3":20,"nome1":"Contas fixas","nome2":"Gastos variáveis","nome3":"Reserva / Pessoal","banco1":"","banco2":"","banco3":""},"meta":{"valor":380,"descricao":"Meta de economia"}},"8":{"entradas":[{"id":131,"nome":"Recebimentos outros Junior","valor":0,"obs":""},{"id":132,"nome":"Entrada Marketing Junior","valor":0,"obs":""},{"id":133,"nome":"Salário Michelle","valor":0,"obs":""},{"id":134,"nome":"Atendimentos","valor":0,"obs":""},{"id":135,"nome":"Semijóias","valor":0,"obs":""}],"fixa":[{"id":193,"nome":"Aluguel ","valor":0,"obs":""},{"id":194,"nome":"Escola Laura","valor":0,"obs":""},{"id":195,"nome":"Luz","valor":0,"obs":""},{"id":196,"nome":"Convênio Michelle","valor":0,"obs":""},{"id":197,"nome":"Atomos Ju","valor":0,"obs":""},{"id":198,"nome":"Atomos Mi","valor":0,"obs":""},{"id":199,"nome":"","valor":0,"obs":""}],"variavel":[{"id":341,"nome":"Ofertas/Dizimos","valor":0,"obs":""},{"id":342,"nome":"Cartão de crédito (Meu)","valor":0,"obs":""},{"id":343,"nome":"Cartão de crédito (Riachuelo)","valor":0,"obs":""},{"id":344,"nome":"Cartão de crédito (BB)","valor":0,"obs":""},{"id":345,"nome":"Cartão de crédito (Torra)","valor":0,"obs":""},{"id":346,"nome":"Cuidados Pets","valor":0,"obs":""},{"id":347,"nome":"Transferências Michelle/Junior","valor":0,"obs":""},{"id":348,"nome":"Cantina Escolinha/ Lanche","valor":0,"obs":""},{"id":349,"nome":"Supermercado/ Padaria","valor":0,"obs":""},{"id":350,"nome":"Carro - IPVA / Seguros / Manut. Casa","valor":0,"obs":""},{"id":351,"nome":"Combustivél/ Conveniência","valor":0,"obs":""},{"id":352,"nome":"Farmácias","valor":0,"obs":""},{"id":353,"nome":"Transferências S.A São Paulo","valor":0,"obs":""},{"id":354,"nome":"Gastos com presentes","valor":0,"obs":""},{"id":355,"nome":"Comida de rua/ Salgaderia/ Alimentação Shopping","valor":0,"obs":""},{"id":356,"nome":"Outros gastos/ Estacionamento","valor":0,"obs":""},{"id":357,"nome":"Enviado para outras contas","valor":0,"obs":""},{"id":358,"nome":"Saídas/ Sueli","valor":0,"obs":""},{"id":359,"nome":"Entradas / Sueli","valor":0,"obs":""},{"id":360,"nome":"Acertos Semi Jóias","valor":0,"obs":""}],"outros":[{"id":406,"nome":"","valor":0,"obs":""},{"id":407,"nome":"Vestuário","valor":0,"obs":""},{"id":408,"nome":"Cuidados pessoais","valor":0,"obs":""},{"id":409,"nome":"Gáz","valor":0,"obs":""},{"id":410,"nome":"Mesada Laura","valor":0,"obs":""},{"id":411,"nome":"Desenvolvimento pessoal/ Cursos","valor":0,"obs":""},{"id":412,"nome":"Lazer/Cinema/Sorveteria","valor":0,"obs":""}],"investimentos":[{"id":208,"nome":"Reserva de emergência","valor":0,"local":"","obs":""}],"div":{"pct1":60,"pct2":20,"pct3":20,"nome1":"Contas fixas","nome2":"Gastos variáveis","nome3":"Reserva / Pessoal","banco1":"","banco2":"","banco3":""},"meta":{"valor":380,"descricao":"Meta de economia"}},"9":{"entradas":[{"id":136,"nome":"Recebimentos outros Junior","valor":0,"obs":""},{"id":137,"nome":"Entrada Marketing Junior","valor":0,"obs":""},{"id":138,"nome":"Salário Michelle","valor":0,"obs":""},{"id":139,"nome":"Atendimentos","valor":0,"obs":""},{"id":140,"nome":"Semijóias","valor":0,"obs":""}],"fixa":[{"id":200,"nome":"Aluguel ","valor":0,"obs":""},{"id":201,"nome":"Escola Laura","valor":0,"obs":""},{"id":202,"nome":"Luz","valor":0,"obs":""},{"id":203,"nome":"Convênio Michelle","valor":0,"obs":""},{"id":204,"nome":"Atomos Ju","valor":0,"obs":""},{"id":205,"nome":"Atomos Mi","valor":0,"obs":""},{"id":206,"nome":"","valor":0,"obs":""}],"variavel":[{"id":361,"nome":"Ofertas/Dizimos","valor":0,"obs":""},{"id":362,"nome":"Cartão de crédito (Meu)","valor":0,"obs":""},{"id":363,"nome":"Cartão de crédito (Riachuelo)","valor":0,"obs":""},{"id":364,"nome":"Cartão de crédito (BB)","valor":0,"obs":""},{"id":365,"nome":"Cartão de crédito (Torra)","valor":0,"obs":""},{"id":366,"nome":"Cuidados Pets","valor":0,"obs":""},{"id":367,"nome":"Transferências Michelle/Junior","valor":0,"obs":""},{"id":368,"nome":"Cantina Escolinha/ Lanche","valor":0,"obs":""},{"id":369,"nome":"Supermercado/ Padaria","valor":0,"obs":""},{"id":370,"nome":"Carro - IPVA / Seguros / Manut. Casa","valor":0,"obs":""},{"id":371,"nome":"Combustivél/ Conveniência","valor":0,"obs":""},{"id":372,"nome":"Farmácias","valor":0,"obs":""},{"id":373,"nome":"Transferências S.A São Paulo","valor":0,"obs":""},{"id":374,"nome":"Gastos com presentes","valor":0,"obs":""},{"id":375,"nome":"Comida de rua/ Salgaderia/ Alimentação Shopping","valor":0,"obs":""},{"id":376,"nome":"Outros gastos/ Estacionamento","valor":0,"obs":""},{"id":377,"nome":"Enviado para outras contas","valor":0,"obs":""},{"id":378,"nome":"Saídas/ Sueli","valor":0,"obs":""},{"id":379,"nome":"Entradas / Sueli","valor":0,"obs":""},{"id":380,"nome":"Acertos Semi Jóias","valor":0,"obs":""}],"outros":[{"id":445,"nome":"","valor":0,"obs":""},{"id":446,"nome":"Vestuário","valor":0,"obs":""},{"id":447,"nome":"Cuidados pessoais","valor":0,"obs":""},{"id":448,"nome":"Gáz","valor":0,"obs":""},{"id":449,"nome":"Mesada Laura","valor":0,"obs":""},{"id":450,"nome":"Desenvolvimento pessoal/ Cursos","valor":0,"obs":""},{"id":451,"nome":"Lazer/Cinema/Sorveteria","valor":0,"obs":""}],"investimentos":[{"id":220,"nome":"Reserva de emergência","valor":0,"local":"","obs":""}],"div":{"pct1":60,"pct2":20,"pct3":20,"nome1":"Contas fixas","nome2":"Gastos variáveis","nome3":"Reserva / Pessoal","banco1":"","banco2":"","banco3":""},"meta":{"valor":380,"descricao":"Meta de economia"}},"10":{"entradas":[{"id":141,"nome":"Recebimentos outros Junior","valor":0,"obs":""},{"id":142,"nome":"Entrada Marketing Junior","valor":0,"obs":""},{"id":143,"nome":"Salário Michelle","valor":0,"obs":""},{"id":144,"nome":"Atendimentos","valor":0,"obs":""},{"id":145,"nome":"Semijóias","valor":0,"obs":""}],"fixa":[{"id":207,"nome":"Aluguel ","valor":0,"obs":""},{"id":208,"nome":"Escola Laura","valor":0,"obs":""},{"id":209,"nome":"Luz","valor":0,"obs":""},{"id":210,"nome":"Convênio Michelle","valor":0,"obs":""},{"id":211,"nome":"Atomos Ju","valor":0,"obs":""},{"id":212,"nome":"Atomos Mi","valor":0,"obs":""},{"id":213,"nome":"","valor":0,"obs":""}],"variavel":[{"id":381,"nome":"Ofertas/Dizimos","valor":0,"obs":""},{"id":382,"nome":"Cartão de crédito (Meu)","valor":0,"obs":""},{"id":383,"nome":"Cartão de crédito (Riachuelo)","valor":0,"obs":""},{"id":384,"nome":"Cartão de crédito (BB)","valor":0,"obs":""},{"id":385,"nome":"Cartão de crédito (Torra)","valor":0,"obs":""},{"id":386,"nome":"Cuidados Pets","valor":0,"obs":""},{"id":387,"nome":"Transferências Michelle/Junior","valor":0,"obs":""},{"id":388,"nome":"Cantina Escolinha/ Lanche","valor":0,"obs":""},{"id":389,"nome":"Supermercado/ Padaria","valor":0,"obs":""},{"id":390,"nome":"Carro - IPVA / Seguros / Manut. Casa","valor":0,"obs":""},{"id":391,"nome":"Combustivél/ Conveniência","valor":0,"obs":""},{"id":392,"nome":"Farmácias","valor":0,"obs":""},{"id":393,"nome":"Transferências S.A São Paulo","valor":0,"obs":""},{"id":394,"nome":"Gastos com presentes","valor":0,"obs":""},{"id":395,"nome":"Comida de rua/ Salgaderia/ Alimentação Shopping","valor":0,"obs":""},{"id":396,"nome":"Outros gastos/ Estacionamento","valor":0,"obs":""},{"id":397,"nome":"Enviado para outras contas","valor":0,"obs":""},{"id":398,"nome":"Saídas/ Sueli","valor":0,"obs":""},{"id":399,"nome":"Entradas / Sueli","valor":0,"obs":""},{"id":400,"nome":"Acertos Semi Jóias","valor":0,"obs":""}],"outros":[{"id":484,"nome":"","valor":0,"obs":""},{"id":485,"nome":"Vestuário","valor":0,"obs":""},{"id":486,"nome":"Cuidados pessoais","valor":0,"obs":""},{"id":487,"nome":"Gáz","valor":0,"obs":""},{"id":488,"nome":"Mesada Laura","valor":0,"obs":""},{"id":489,"nome":"Desenvolvimento pessoal/ Cursos","valor":0,"obs":""},{"id":490,"nome":"Lazer/Cinema/Sorveteria","valor":0,"obs":""}],"investimentos":[{"id":232,"nome":"Reserva de emergência","valor":0,"local":"","obs":""}],"div":{"pct1":60,"pct2":20,"pct3":20,"nome1":"Contas fixas","nome2":"Gastos variáveis","nome3":"Reserva / Pessoal","banco1":"","banco2":"","banco3":""},"meta":{"valor":380,"descricao":"Meta de economia"}},"11":{"entradas":[{"id":146,"nome":"Recebimentos outros Junior","valor":0,"obs":""},{"id":147,"nome":"Entrada Marketing Junior","valor":0,"obs":""},{"id":148,"nome":"Salário Michelle","valor":0,"obs":""},{"id":149,"nome":"Atendimentos","valor":0,"obs":""},{"id":150,"nome":"Semijóias","valor":0,"obs":""}],"fixa":[{"id":214,"nome":"Aluguel ","valor":0,"obs":""},{"id":215,"nome":"Escola Laura","valor":0,"obs":""},{"id":216,"nome":"Luz","valor":0,"obs":""},{"id":217,"nome":"Convênio Michelle","valor":0,"obs":""},{"id":218,"nome":"Atomos Ju","valor":0,"obs":""},{"id":219,"nome":"Atomos Mi","valor":0,"obs":""},{"id":220,"nome":"","valor":0,"obs":""}],"variavel":[{"id":401,"nome":"Ofertas/Dizimos","valor":0,"obs":""},{"id":402,"nome":"Cartão de crédito (Meu)","valor":0,"obs":""},{"id":403,"nome":"Cartão de crédito (Riachuelo)","valor":0,"obs":""},{"id":404,"nome":"Cartão de crédito (BB)","valor":0,"obs":""},{"id":405,"nome":"Cartão de crédito (Torra)","valor":0,"obs":""},{"id":406,"nome":"Cuidados Pets","valor":0,"obs":""},{"id":407,"nome":"Transferências Michelle/Junior","valor":0,"obs":""},{"id":408,"nome":"Cantina Escolinha/ Lanche","valor":0,"obs":""},{"id":409,"nome":"Supermercado/ Padaria","valor":0,"obs":""},{"id":410,"nome":"Carro - IPVA / Seguros / Manut. Casa","valor":0,"obs":""},{"id":411,"nome":"Combustivél/ Conveniência","valor":0,"obs":""},{"id":412,"nome":"Farmácias","valor":0,"obs":""},{"id":413,"nome":"Transferências S.A São Paulo","valor":0,"obs":""},{"id":414,"nome":"Gastos com presentes","valor":0,"obs":""},{"id":415,"nome":"Comida de rua/ Salgaderia/ Alimentação Shopping","valor":0,"obs":""},{"id":416,"nome":"Outros gastos/ Estacionamento","valor":0,"obs":""},{"id":417,"nome":"Enviado para outras contas","valor":0,"obs":""},{"id":418,"nome":"Saídas/ Sueli","valor":0,"obs":""},{"id":419,"nome":"Entradas / Sueli","valor":0,"obs":""},{"id":420,"nome":"Acertos Semi Jóias","valor":0,"obs":""}],"outros":[{"id":523,"nome":"","valor":0,"obs":""},{"id":524,"nome":"Vestuário","valor":0,"obs":""},{"id":525,"nome":"Cuidados pessoais","valor":0,"obs":""},{"id":526,"nome":"Gáz","valor":0,"obs":""},{"id":527,"nome":"Mesada Laura","valor":0,"obs":""},{"id":528,"nome":"Desenvolvimento pessoal/ Cursos","valor":0,"obs":""},{"id":529,"nome":"Lazer/Cinema/Sorveteria","valor":0,"obs":""}],"investimentos":[{"id":244,"nome":"Reserva de emergência","valor":0,"local":"","obs":""}],"div":{"pct1":60,"pct2":20,"pct3":20,"nome1":"Contas fixas","nome2":"Gastos variáveis","nome3":"Reserva / Pessoal","banco1":"","banco2":"","banco3":""},"meta":{"valor":380,"descricao":"Meta de economia"}}};
+      localStorage.setItem(SK, JSON.stringify(dadosRecuperados));
+    }
+    if(!localStorage.getItem(PK)){
+      var perfilRecuperado = {"nome":"JUNIOR","renda":3800,"metaPadrao":380,"salarioBase":1.91};
+      localStorage.setItem(PK, JSON.stringify(perfilRecuperado));
+    }
+  }catch(e){}
+})();
+
+var nid=100; function uid(){return ++nid}
+function fmt(v){return 'R$\u00a0'+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function pv(s){
+  // Suporta fórmulas simples: "10+15" → 25, "10,50+5" → 15.50
+  var str=String(s||'').trim().replace(/\s/g,'').replace(/,/g,'.');
+  if(!str)return 0;
+  // Se contém + ou -, tenta avaliar como soma
+  if(/[+]/.test(str)){
+    try{
+      // Apenas números, pontos e +
+      var safe=str.replace(/[^0-9.+\-]/g,'');
+      var parts=safe.split('+');
+      var total=0;
+      parts.forEach(function(p){total+=parseFloat(p)||0;});
+      return Math.round(total*100)/100;
+    }catch(e){}
+  }
+  return parseFloat(str.replace(/[^0-9.-]/g,''))||0;
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+
+var perfil={nome:'',renda:0,metaPadrao:0,salarioBase:0};
+var curMes=new Date().getMonth(), curNav='painel', curSaidaTab='fixa';
+var pieChart=null, anoChart=null;
+var dados={};
+// timer para salvar com debounce (evita salvar a cada tecla, salva 400ms após parar de digitar)
+var saveTimer=null;
+function salvarDebounce(){clearTimeout(saveTimer);saveTimer=setTimeout(function(){salvar();},400)}
+function salvar(){try{localStorage.setItem(SK,JSON.stringify(dados));localStorage.setItem(PK,JSON.stringify(perfil))}catch(e){}}
+
+function carregar(){
+  try{
+    var p=localStorage.getItem(PK); if(p)perfil=JSON.parse(p);
+    var d=localStorage.getItem(SK); if(d){dados=JSON.parse(d);return true}
+  }catch(e){}
+  return false;
+}
+
+function dadosPadraoMes(meta,renda){
+  return{
+    entradas:[{id:uid(),nome:'Salário',valor:renda||0,obs:''},{id:uid(),nome:'Outras entradas',valor:0,obs:''}],
+    fixa:[{id:uid(),nome:'Aluguel / Financiamento',valor:0,obs:''},{id:uid(),nome:'Internet / Telefone',valor:0,obs:''},{id:uid(),nome:'Plano de saúde',valor:0,obs:''},{id:uid(),nome:'Água / Luz / Gás',valor:0,obs:''}],
+    variavel:[{id:uid(),nome:'Mercado',valor:0,obs:''},{id:uid(),nome:'Combustível / Transporte',valor:0,obs:''},{id:uid(),nome:'Cartão de crédito',valor:0,obs:''}],
+    outros:[{id:uid(),nome:'Lazer / Restaurante',valor:0,obs:''},{id:uid(),nome:'Vestuário',valor:0,obs:''}],
+    investimentos:[{id:uid(),nome:'Reserva de emergência',valor:0,local:'',obs:''}],
+    div:{pct1:60,pct2:20,pct3:20,nome1:'Contas fixas',nome2:'Gastos variáveis',nome3:'Reserva / Pessoal',banco1:'',banco2:'',banco3:''},
+    meta:{valor:meta||0,descricao:'Meta de economia'}
+  };
+}
+function garantirMeses(){MESES.forEach(function(_,i){if(!dados[i])dados[i]=dadosPadraoMes(perfil.metaPadrao,i===curMes?perfil.renda:0)})}
+
+function iniciarApp(){
+  var n=document.getElementById('sNome').value.trim();
+  if(!n){alert('Informe seu nome para continuar.');return}
+  perfil.nome=n;
+  perfil.renda=pv(document.getElementById('sRenda').value);
+  perfil.metaPadrao=pv(document.getElementById('sMeta').value);
+  var p1=parseFloat(document.getElementById('sPct1').value)||60;
+  var p2=parseFloat(document.getElementById('sPct2').value)||20;
+  var p3=Math.max(0,100-p1-p2);
+  garantirMeses();
+  MESES.forEach(function(_,i){
+    dados[i].div.pct1=p1;dados[i].div.pct2=p2;dados[i].div.pct3=p3;
+    dados[i].meta.valor=perfil.metaPadrao;
+    if(perfil.renda>0&&dados[i].entradas[0])dados[i].entradas[0].valor=perfil.renda;
+  });
+  salvar();mostrarApp();
+}
+
+function mostrarApp(){
+  document.getElementById('setupScreen').style.display='none';
+  var app=document.getElementById('mainApp');
+  app.classList.add('show');
+  document.getElementById('userBadge').textContent=perfil.nome;
+  document.getElementById('dateBadge').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});
+  renderMonthBar();renderAll();
+  // Restaura salário base
+  var sbi=document.getElementById('salarioBaseInput');
+  if(sbi&&perfil.salarioBase>0)sbi.value=perfil.salarioBase.toFixed(2).replace('.',',');
+}
+function updSalarioBase(inp){
+  perfil.salarioBase=pv(inp.value);
+  salvar();
+}
+
+function abrirSettings(){
+  document.getElementById('cfgNome').value=perfil.nome;
+  document.getElementById('cfgRenda').value=perfil.renda||'';
+  document.getElementById('cfgMeta').value=perfil.metaPadrao||'';
+  document.getElementById('settingsModal').classList.add('show');
+}
+function fecharSettings(){document.getElementById('settingsModal').classList.remove('show')}
+
+// Fechar confirm clicando fora
+document.getElementById('confirmModal').addEventListener('click',function(e){
+  if(e.target===this)fecharConfirm();
+});
+function salvarSettings(){
+  var n=document.getElementById('cfgNome').value.trim();
+  if(n)perfil.nome=n;
+  perfil.renda=pv(document.getElementById('cfgRenda').value);
+  perfil.metaPadrao=pv(document.getElementById('cfgMeta').value);
+  document.getElementById('userBadge').textContent=perfil.nome;
+  salvar();fecharSettings();showToast('Configurações salvas!');
+}
+function resetarDados(){
+  if(!confirm('Apagar todos os dados? Não tem como desfazer.'))return;
+  localStorage.removeItem(SK);localStorage.removeItem(PK);location.reload();
+}
+
+function renderMonthBar(){
+  var bar=document.getElementById('monthBar');bar.innerHTML='';
+  MESES.forEach(function(_,i){
+    var b=document.createElement('button');
+    b.className='mbtn'+(i===curMes?' on':'');
+    b.textContent=MESES_ABR[i];
+    b.onclick=function(){
+      // SALVA TUDO ANTES de trocar de mês
+      salvarCamposAtivos();
+      curMes=i;renderMonthBar();renderAll();
+    };
+    bar.appendChild(b);
+  });
+  setTimeout(function(){var on=bar.querySelector('.on');if(on)on.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'})},50);
+}
+
+function setNav(n){
+  // SALVA TUDO ANTES de trocar de aba
+  salvarCamposAtivos();
+  curNav=n;
+  ['painel','entradas','saidas','investimentos','anual'].forEach(function(x){
+    var b=document.getElementById('tn-'+x);
+    if(b)b.className='tnav-btn'+(x===n?' on':'');
+  });
+  renderAll();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── FUNÇÃO CHAVE: lê todos os inputs visíveis e salva no estado antes de qualquer navegação ──
+function salvarCamposAtivos(){
+  var pw=document.getElementById('pageWrap');
+  if(!pw)return;
+  // inputs com data-id e data-tipo (campos de itens)
+  pw.querySelectorAll('input[data-id][data-tipo][data-campo]').forEach(function(inp){
+    var id=parseInt(inp.dataset.id);
+    var tipo=inp.dataset.tipo;
+    var campo=inp.dataset.campo;
+    var arr=getArr(tipo);
+    var it=arr.find(function(x){return x.id===id});
+    if(!it)return;
+    if(campo==='valor')it.valor=pv(inp.value);
+    else it[campo]=inp.value;
+  });
+  // inputs de divisão
+  pw.querySelectorAll('input[data-div-n][data-div-f]').forEach(function(inp){
+    var n=parseInt(inp.dataset.divN);
+    var f=inp.dataset.divF;
+    var d=dados[curMes].div;
+    if(f==='pct')d['pct'+n]=parseFloat(inp.value)||0;
+    else d[f+n]=inp.value;
+  });
+  // meta
+  var metaNome=pw.querySelector('input[data-meta="descricao"]');
+  var metaVal=pw.querySelector('input[data-meta="valor"]');
+  if(metaNome)dados[curMes].meta.descricao=metaNome.value;
+  if(metaVal)dados[curMes].meta.valor=pv(metaVal.value);
+  salvar();
+}
+
+function somaArr(a){return(a||[]).reduce(function(s,x){return s+(x.valor||0)},0)}
+function totalE(m){return somaArr(dados[m].entradas)}
+function totalS(m){return somaArr(dados[m].fixa)+somaArr(dados[m].variavel)+somaArr(dados[m].outros)}
+function totalI(m){return somaArr(dados[m].investimentos)}
+function sld(m){return totalE(m)-totalS(m)}
+
+function renderAll(){
+  if(curNav==='painel')renderPainel();
+  else if(curNav==='entradas')renderEntradas();
+  else if(curNav==='saidas')renderSaidas();
+  else if(curNav==='investimentos')renderInvestimentos();
+  else if(curNav==='anual')renderAnual();
+}
+
+function kc(l,v,c,s){return '<div class="kc"><div class="kl">'+l+'</div><div class="kv" style="color:'+c+'">'+v+'</div>'+(s?'<div class="ks">'+s+'</div>':'')+'</div>'}
+
+// ── TABELA DE ITENS — usa data-* para identificar campo sem depender de onchange ──
+function tblItens(items,tipo,corVal){
+  if(!items||!items.length){
+    return '<div class="empty"><i class="ti ti-inbox"></i>Nenhum item ainda.<br>Clique em <strong style="color:#f0f2f8">"+ Adicionar"</strong> para começar.</div>';
+  }
+  var h='<div class="tbl-wrap">';
+  h+='<div class="tbl-hd" style="grid-template-columns:1fr 150px 120px 34px"><span>Nome</span><span>Observação</span><span style="text-align:right">Valor (R$)</span><span></span></div>';
+  items.forEach(function(it){
+    h+='<div class="tbl-row" style="grid-template-columns:1fr 150px 120px 34px">'+
+      '<input class="fi" data-id="'+it.id+'" data-tipo="'+tipo+'" data-campo="nome" value="'+esc(it.nome)+'" placeholder="Nome do gasto" oninput="updCampo(this)">'+
+      '<input class="fi fi-obs" data-id="'+it.id+'" data-tipo="'+tipo+'" data-campo="obs" value="'+esc(it.obs||'')+'" placeholder="Ex: Nubank, Pix..." oninput="updCampo(this)">'+
+      '<input class="fi" data-id="'+it.id+'" data-tipo="'+tipo+'" data-campo="valor" style="text-align:right;font-weight:700;color:'+corVal+'" value="'+it.valor.toFixed(2).replace('.',',')+'" oninput="updCampoValor(this)" onkeydown="onEnterValor(this,event)" placeholder="0,00 ou 10+15">'+
+      '<button class="del-btn" onclick="confirmarDel(\''+tipo+'\','+it.id+')" title="Remover item"><i class="ti ti-trash"></i></button>'+
+    '</div>';
+  });
+  return h+'</div>';
+}
+
+// ── UPDCAMPO — salva imediatamente no estado e no localStorage ──
+function updCampo(inp){
+  var id=parseInt(inp.dataset.id), tipo=inp.dataset.tipo, campo=inp.dataset.campo;
+  var arr=getArr(tipo);
+  var it=arr.find(function(x){return x.id===id});
+  if(!it)return;
+  it[campo]=inp.value;
+  salvarDebounce();
+}
+// Para valor: converte vírgula em ponto antes de salvar
+function updCampoValor(inp){
+  var id=parseInt(inp.dataset.id), tipo=inp.dataset.tipo;
+  var arr=getArr(tipo);
+  var it=arr.find(function(x){return x.id===id});
+  if(!it)return;
+  it.valor=pv(inp.value);
+  salvarDebounce();
+}
+function onEnterValor(inp,e){
+  if(e.key==='Enter'){
+    e.preventDefault();
+    var id=parseInt(inp.dataset.id), tipo=inp.dataset.tipo;
+    var arr=getArr(tipo);
+    var it=arr.find(function(x){return x.id===id});
+    if(!it)return;
+    var calc=pv(inp.value);
+    it.valor=calc;
+    // Atualiza visualmente com resultado formatado
+    inp.value=calc.toFixed(2).replace('.',',');
+    inp.blur();
+    salvar();
+    // Re-renderiza totais sem re-renderizar toda a tela
+    atualizarTotaisVisiveis();
+  }
+}
+// Atualiza só os totais visíveis sem recriar os inputs (preserva o que o usuário está digitando)
+function atualizarTotaisVisiveis(){
+  var te=totalE(curMes),ts=totalS(curMes),ti=totalI(curMes),sl=sld(curMes);
+  // Totais de cada seção
+  ['totalE','totalS','totalI','totalSl','totalDiv'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el)return;
+    if(id==='totalE')el.textContent=fmt(te);
+    if(id==='totalS')el.textContent=fmt(ts);
+    if(id==='totalI')el.textContent=fmt(ti);
+    if(id==='totalSl')el.textContent=fmt(sl);
+  });
+}
+
+// ── PAINEL ──
+function renderPainel(){
+  var te=totalE(curMes),ts=totalS(curMes),ti=totalI(curMes),sl=sld(curMes);
+  var d=dados[curMes].div,mt=dados[curMes].meta;
+  var metaV=mt.valor||0,metaAlc=Math.max(0,sl);
+  var metaPct=metaV>0?Math.min(100,Math.round(metaAlc/metaV*100)):0;
+  var metaCor=metaPct>=100?'#6fc43a':metaPct>=50?'#f5a623':'#e05252';
+  var sf=somaArr(dados[curMes].fixa),sv=somaArr(dados[curMes].variavel),so=somaArr(dados[curMes].outros);
+
+  var h='<div class="kg">';
+  h+=kc('Entradas',fmt(te),'#a3e06a');
+  h+=kc('Saídas',fmt(ts),'#f08080');
+  h+=kc('Saldo',fmt(sl),sl>=0?'#a3e06a':'#f08080');
+  h+=kc('Investimentos',fmt(ti),'#c4b5ff');
+  h+='</div>';
+
+  if(te>0){
+    var ac=sl<0?'rgba(224,82,82,.12)':'rgba(111,196,58,.12)';
+    var at=sl<0?'#f08080':'#a3e06a';
+    var am=sl<0?'Saldo negativo de '+fmt(Math.abs(sl))+'. Revise os gastos!':'Parabéns! Saldo positivo de '+fmt(sl)+' em '+MESES[curMes]+'.';
+    h+='<div class="alert-bar" style="background:'+ac+';color:'+at+';border:0.5px solid '+at+'50"><i class="ti '+(sl<0?'ti-alert-circle':'ti-circle-check')+'"></i>'+am+'</div>';
+  }
+
+  // Meta — usa data-meta para identificação
+  h+='<div class="meta-wrap">';
+  h+='<div class="meta-header">';
+  h+='<input class="meta-name-in" data-meta="descricao" value="'+esc(mt.descricao)+'" placeholder="Nome da meta" oninput="updMeta(this)">';
+  h+='<div style="display:flex;align-items:center;gap:6px"><span style="font-size:12px;color:#8892aa">Meta R$</span><input type="number" class="meta-val-in" data-meta="valor" value="'+(metaV||'')+'" placeholder="0,00" oninput="updMeta(this)"></div>';
+  h+='</div>';
+  h+='<div style="display:flex;justify-content:space-between;font-size:12px;color:#8892aa;margin-bottom:5px"><span>Economizado: <strong style="color:'+metaCor+'">'+fmt(metaAlc)+'</strong></span><span style="color:'+metaCor+';font-weight:700">'+metaPct+'%</span></div>';
+  h+='<div class="pbar-bg"><div class="pbar" style="width:'+metaPct+'%;background:'+metaCor+'"></div></div>';
+  if(metaV>0){var falta=Math.max(0,metaV-metaAlc);h+='<div style="font-size:11px;color:#555f78;margin-top:5px">'+(metaPct>=100?'✓ Meta atingida!':'Faltam '+fmt(falta)+' para atingir a meta.')+'</div>';}
+  h+='</div>';
+
+  h+='<div class="two-col">';
+
+  // Divisão — usa data-div-n e data-div-f
+  h+='<div class="card" style="margin-bottom:0">';
+  h+='<div class="card-title"><i class="ti ti-layout-distribute-horizontal" style="font-size:14px"></i>Divisão do saldo</div>';
+  [{n:1,c:'#7bbcff',bg:'#4d9ef5'},{n:2,c:'#ffc36b',bg:'#f5a623'},{n:3,c:'#a3e06a',bg:'#6fc43a'}].forEach(function(cfg){
+    var nm=d['nome'+cfg.n],pct=d['pct'+cfg.n],val=te*(pct/100),banco=d['banco'+cfg.n];
+    h+='<div class="div-item"><div class="div-header">';
+    h+='<input class="div-name-in" data-div-n="'+cfg.n+'" data-div-f="nome" value="'+esc(nm)+'" oninput="updDiv(this)">';
+    h+='<div style="display:flex;align-items:center;gap:4px"><input class="pct-in" type="number" min="0" max="100" data-div-n="'+cfg.n+'" data-div-f="pct" value="'+pct+'" oninput="updDiv(this)"><span style="font-size:11px;color:#555f78">%</span></div>';
+    h+='</div>';
+    h+='<div class="div-val" style="color:'+cfg.c+'">'+fmt(val)+'</div>';
+    h+='<div class="pbar-bg"><div class="pbar" style="width:'+Math.min(pct,100)+'%;background:'+cfg.bg+'"></div></div>';
+    h+='<input class="div-bank-in" data-div-n="'+cfg.n+'" data-div-f="banco" placeholder="Banco / destino..." value="'+esc(banco)+'" oninput="updDiv(this)">';
+    h+='</div>';
+  });
+  var tp=d.pct1+d.pct2+d.pct3;
+  if(tp!==100)h+='<div style="font-size:11px;color:#f08080;margin-top:4px"><i class="ti ti-alert-circle" style="margin-right:3px;vertical-align:-1px"></i>Soma: '+tp+'% — ajuste para 100%</div>';
+  h+='</div>';
+
+  // Pizza
+  h+='<div class="card" style="margin-bottom:0">';
+  h+='<div class="card-title"><i class="ti ti-chart-pie" style="font-size:14px"></i>Saídas por categoria</div>';
+  if(sf+sv+so>0){h+='<div class="chart-wrap"><canvas id="pieCanvas"></canvas></div>';}
+  else{h+='<div class="empty" style="padding:20px 0"><i class="ti ti-chart-pie-off" style="font-size:24px"></i>Sem saídas registradas</div>';}
+  h+='<div style="display:flex;flex-direction:column;gap:7px;margin-top:12px">';
+  [{l:'Fixas',v:sf,c:'#e05252'},{l:'Variáveis',v:sv,c:'#f5a623'},{l:'Outros',v:so,c:'#e8693a'}].forEach(function(x){
+    var pct=ts>0?Math.round(x.v/ts*100):0;
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px"><span style="display:flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:2px;background:'+x.c+';display:inline-block"></span><span style="color:#8892aa">'+x.l+'</span></span><span style="color:#f0f2f8;font-weight:600">'+fmt(x.v)+'<span style="color:#555f78;font-weight:400;font-size:11px;margin-left:4px">'+pct+'%</span></span></div>';
+  });
+  h+='</div></div></div>';
+
+  document.getElementById('pageWrap').innerHTML=h;
+  if(pieChart){pieChart.destroy();pieChart=null}
+  if(sf+sv+so>0){var cv=document.getElementById('pieCanvas');if(cv)pieChart=new Chart(cv,{type:'doughnut',data:{labels:['Fixas','Variáveis','Outros'],datasets:[{data:[sf,sv,so],backgroundColor:['#e05252','#f5a623','#e8693a'],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'62%'}})}
+}
+
+// ── UPDCAMPO funções de painel ──
+function updMeta(inp){
+  var f=inp.dataset.meta;
+  if(f==='valor')dados[curMes].meta.valor=pv(inp.value);
+  else dados[curMes].meta.descricao=inp.value;
+  salvarDebounce();
+}
+function updDiv(inp){
+  var n=parseInt(inp.dataset.divN),f=inp.dataset.divF;
+  var d=dados[curMes].div;
+  if(f==='pct')d['pct'+n]=parseFloat(inp.value)||0;
+  else d[f+n]=inp.value;
+  salvarDebounce();
+}
+
+// ── ENTRADAS ──
+function renderEntradas(){
+  var items=dados[curMes].entradas,total=somaArr(items);
+  var h='<div class="card">';
+  h+='<div class="row-actions">';
+  h+='<div class="sec-label" style="color:#a3e06a"><i class="ti ti-arrow-up-circle" style="font-size:16px"></i>Entradas — '+MESES[curMes]+'</div>';
+  h+='<button class="add-btn" style="background:#1a2e10;color:#a3e06a;border-color:#6fc43a" onclick="addE()"><i class="ti ti-plus"></i> Adicionar</button>';
+  h+='<button class="pdf-btn" onclick="exportCat(\'entradas\')"><i class="ti ti-download"></i> PDF</button>';
+  h+='</div>';
+  h+=tblItens(items,'e','#a3e06a');
+  h+='<div class="total-row"><span style="color:#8892aa">Total entradas</span><span style="color:#a3e06a">'+fmt(total)+'</span></div>';
+  h+='</div>';
+  document.getElementById('pageWrap').innerHTML=h;
+}
+
+// ── SAIDAS ──
+var SCFG={
+  fixa:{l:'Contas fixas',ic:'ti-lock',c:'#f08080',bg:'rgba(224,82,82,.1)',bd:'#e05252'},
+  variavel:{l:'Contas variáveis',ic:'ti-arrows-shuffle',c:'#ffc36b',bg:'rgba(245,166,35,.1)',bd:'#f5a623'},
+  outros:{l:'Outros gastos',ic:'ti-dots-circle-horizontal',c:'#f0956a',bg:'rgba(232,105,58,.1)',bd:'#e8693a'}
+};
+function renderSaidas(){
+  var h='<div class="cat-tabs">';
+  ['fixa','variavel','outros'].forEach(function(t){
+    var cfg=SCFG[t],a=t===curSaidaTab;
+    h+='<button class="cat-tab'+(a?' on':'')+'" style="'+(a?'color:'+cfg.c+';border-bottom-color:'+cfg.bd:'')+'\" onclick="setST(\''+t+'\')"><i class="ti '+cfg.ic+'"></i>'+cfg.l+'</button>';
+  });
+  h+='</div>';
+  var cfg=SCFG[curSaidaTab],items=dados[curMes][curSaidaTab],total=somaArr(items);
+  h+='<div class="card">';
+  h+='<div class="row-actions">';
+  h+='<div class="sec-label" style="color:'+cfg.c+'"><i class="ti '+cfg.ic+'" style="font-size:16px"></i>'+cfg.l+' — '+MESES[curMes]+'</div>';
+  h+='<button class="add-btn" style="background:'+cfg.bg+';color:'+cfg.c+';border-color:'+cfg.bd+'" onclick="addS(\''+curSaidaTab+'\')"><i class="ti ti-plus"></i> Adicionar</button>';
+  h+='<button class="pdf-btn" onclick="exportCat(\''+curSaidaTab+'\')"><i class="ti ti-download"></i> PDF</button>';
+  h+='</div>';
+  h+=tblItens(items,'s'+curSaidaTab,cfg.c);
+  h+='<div class="total-row"><span style="color:#8892aa">Total '+cfg.l.toLowerCase()+'</span><span style="color:'+cfg.c+'">'+fmt(total)+'</span></div>';
+  h+='</div>';
+  document.getElementById('pageWrap').innerHTML=h;
+}
+function setST(t){
+  salvarCamposAtivos(); // salva antes de trocar aba de saídas
+  curSaidaTab=t;renderSaidas();
+}
+
+// ── INVESTIMENTOS ──
+function renderInvestimentos(){
+  var items=dados[curMes].investimentos,total=somaArr(items);
+  var somaA=0;MESES.forEach(function(_,i){somaA+=somaArr(dados[i].investimentos)});
+  var h='<div class="kg">';
+  h+=kc('Investido (mês)',fmt(total),'#c4b5ff');
+  h+=kc('Investido (ano)',fmt(somaA),'#c4b5ff');
+  h+=kc('Saldo livre',fmt(sld(curMes)),sld(curMes)>=0?'#a3e06a':'#f08080','Após saídas');
+  h+=kc('Mês',MESES[curMes],'#7bbcff');
+  h+='</div>';
+  h+='<div class="card">';
+  h+='<div class="row-actions">';
+  h+='<div class="sec-label" style="color:#c4b5ff"><i class="ti ti-trending-up" style="font-size:16px"></i>Investimentos — '+MESES[curMes]+'</div>';
+  h+='<button class="add-btn" style="background:rgba(157,136,240,.1);color:#c4b5ff;border-color:#9d88f0" onclick="addInv()"><i class="ti ti-plus"></i> Adicionar</button>';
+  h+='<button class="pdf-btn" onclick="exportCat(\'investimentos\')"><i class="ti ti-download"></i> PDF</button>';
+  h+='</div>';
+  if(!items||!items.length){
+    h+='<div class="empty"><i class="ti ti-inbox"></i>Nenhum investimento registrado.<br>Clique em <strong style="color:#f0f2f8">"+ Adicionar"</strong>.</div>';
+  } else {
+    var g='1fr 120px 130px 120px 34px';
+    h+='<div class="tbl-wrap">';
+    h+='<div class="tbl-hd" style="grid-template-columns:'+g+'"><span>Nome</span><span>Onde está</span><span>Observação</span><span style="text-align:right">Valor (R$)</span><span></span></div>';
+    items.forEach(function(it){
+      h+='<div class="tbl-row" style="grid-template-columns:'+g+'">'+
+        '<input class="fi" data-id="'+it.id+'" data-tipo="inv" data-campo="nome" value="'+esc(it.nome)+'" placeholder="Ex: Tesouro Direto" oninput="updCampo(this)">'+
+        '<input class="fi fi-obs" data-id="'+it.id+'" data-tipo="inv" data-campo="local" value="'+esc(it.local||'')+'" placeholder="Banco Inter..." oninput="updCampo(this)">'+
+        '<input class="fi fi-obs" data-id="'+it.id+'" data-tipo="inv" data-campo="obs" value="'+esc(it.obs||'')+'" placeholder="Observação..." oninput="updCampo(this)">'+
+        '<input class="fi" data-id="'+it.id+'" data-tipo="inv" data-campo="valor" style="text-align:right;font-weight:700;color:#c4b5ff" value="'+it.valor.toFixed(2).replace('.',',')+'" oninput="updCampoValor(this)" onkeydown="onEnterValor(this,event)" placeholder="0,00 ou 10+15">'+
+        '<button class="del-btn" onclick="confirmarDel(\'inv\','+it.id+')" title="Remover"><i class="ti ti-trash"></i></button>'+
+      '</div>';
+    });
+    h+='</div>';
+    h+='<div class="total-row"><span style="color:#8892aa">Total investido em '+MESES[curMes]+'</span><span style="color:#c4b5ff">'+fmt(total)+'</span></div>';
+  }
+  h+='</div>';
+  document.getElementById('pageWrap').innerHTML=h;
+}
+
+// ── ANUAL ──
+function renderAnual(){
+  var tes=[],tss=[],tis=[],sls=[];
+  var somaE=0,somaS=0,somaI=0;
+  MESES.forEach(function(_,i){
+    var te=totalE(i),ts=totalS(i),ti=totalI(i);
+    tes.push(te);tss.push(ts);tis.push(ti);sls.push(te-ts);
+    somaE+=te;somaS+=ts;somaI+=ti;
+  });
+  var h='<div class="kg">';
+  h+=kc('Entradas anuais',fmt(somaE),'#a3e06a');
+  h+=kc('Saídas anuais',fmt(somaS),'#f08080');
+  h+=kc('Saldo anual',fmt(somaE-somaS),somaE-somaS>=0?'#a3e06a':'#f08080');
+  h+=kc('Investido no ano',fmt(somaI),'#c4b5ff');
+  h+='</div>';
+  h+='<div class="card" style="margin-bottom:14px"><div class="card-title"><i class="ti ti-chart-bar" style="font-size:14px"></i>Visão anual 2025</div>';
+  h+='<div style="display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap">';
+  [{l:'Entradas',c:'#6fc43a'},{l:'Saídas',c:'#e05252'},{l:'Invest.',c:'#9d88f0'}].forEach(function(x){
+    h+='<span style="display:flex;align-items:center;gap:4px;font-size:11px;color:#8892aa"><span style="width:9px;height:9px;border-radius:2px;background:'+x.c+';display:inline-block"></span>'+x.l+'</span>';
+  });
+  h+='</div><div class="chart-wrap"><canvas id="anoCanvas"></canvas></div></div>';
+  h+='<div class="card"><div class="card-title"><i class="ti ti-table" style="font-size:14px"></i>Resumo por mês — clique para abrir</div>';
+  h+='<div style="overflow-x:auto"><table class="ano-table"><tr><th>Mês</th><th style="text-align:right;color:#a3e06a">Entradas</th><th style="text-align:right;color:#f08080">Saídas</th><th style="text-align:right;color:#c4b5ff">Invest.</th><th style="text-align:right;color:#7bbcff">Saldo</th></tr>';
+  MESES.forEach(function(m,i){
+    var isc=i===curMes,sl=sls[i];
+    h+='<tr onclick="curMes='+i+';setNav(\'painel\')" style="background:'+(isc?'rgba(77,158,245,.08)':'transparent')+'">';
+    h+='<td style="font-weight:'+(isc?'700':'400')+';color:'+(isc?'#7bbcff':'#f0f2f8')+'">'+m+'</td>';
+    h+='<td style="text-align:right;color:#a3e06a">'+fmt(tes[i])+'</td>';
+    h+='<td style="text-align:right;color:#f08080">'+fmt(tss[i])+'</td>';
+    h+='<td style="text-align:right;color:#c4b5ff">'+fmt(tis[i])+'</td>';
+    h+='<td style="text-align:right;font-weight:700;color:'+(sl>=0?'#a3e06a':'#f08080')+'">'+fmt(sl)+'</td></tr>';
+  });
+  h+='</table></div>';
+  h+='<div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="pdf-btn" onclick="exportCat(\'anual\')" style="font-size:13px;padding:8px 18px;border-color:#f5a623;color:#ffc36b"><i class="ti ti-download"></i> Exportar PDF anual</button></div></div>';
+  document.getElementById('pageWrap').innerHTML=h;
+  if(anoChart){anoChart.destroy();anoChart=null}
+  var cv=document.getElementById('anoCanvas');
+  if(cv)anoChart=new Chart(cv,{type:'bar',data:{labels:MESES_ABR,datasets:[{label:'Entradas',data:tes,backgroundColor:'#6fc43a',borderRadius:3},{label:'Saídas',data:tss,backgroundColor:'#e05252',borderRadius:3},{label:'Invest.',data:tis,backgroundColor:'#9d88f0',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8892aa',font:{size:10},autoSkip:false,maxRotation:0},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#8892aa',font:{size:10},callback:function(v){return 'R$'+v.toLocaleString('pt-BR')}},grid:{color:'rgba(255,255,255,0.04)'}}}}}); 
+}
+
+// ── CRUD ──
+function getArr(t){
+  if(t==='e')return dados[curMes].entradas;
+  if(t==='sfixa')return dados[curMes].fixa;
+  if(t==='svariavel')return dados[curMes].variavel;
+  if(t==='soutros')return dados[curMes].outros;
+  if(t==='inv')return dados[curMes].investimentos;
+  return[];
+}
+// ── CONFIRMAÇÃO DE EXCLUSÃO ──
+var _delPendente={t:null,id:null};
+
+function confirmarDel(t,id){
+  // Acha o item para mostrar nome e valor no modal
+  var arr=getArr(t);
+  var it=(arr||[]).find(function(x){return x.id===id});
+  if(!it)return;
+
+  var nomeExib=it.nome||'Item sem nome';
+  var valorExib=it.valor>0?'Valor: '+fmt(it.valor):'Sem valor cadastrado';
+
+  document.getElementById('confirmNome').textContent=nomeExib;
+  document.getElementById('confirmValor').textContent=valorExib;
+
+  // Guarda o que será excluído
+  _delPendente={t:t,id:id};
+
+  // Conecta o botão de confirmar
+  var btnExcluir=document.getElementById('confirmBtnExcluir');
+  btnExcluir.onclick=function(){executarDel()};
+
+  document.getElementById('confirmModal').classList.add('show');
+}
+
+function fecharConfirm(){
+  document.getElementById('confirmModal').classList.remove('show');
+  _delPendente={t:null,id:null};
+}
+
+function executarDel(){
+  var t=_delPendente.t, id=_delPendente.id;
+  if(!t||!id)return;
+  // Pega nome antes de remover para o toast
+  var arr=getArr(t);
+  var it=(arr||[]).find(function(x){return x.id===id});
+  var nomeRemovido=it?it.nome||'Item':'Item';
+  del(t,id);
+  fecharConfirm();
+  showToast('"'+nomeRemovido+'" removido.');
+}
+
+function del(t,id){
+  function rm(a){return(a||[]).filter(function(x){return x.id!==id})}
+  if(t==='e')dados[curMes].entradas=rm(dados[curMes].entradas);
+  else if(t==='sfixa')dados[curMes].fixa=rm(dados[curMes].fixa);
+  else if(t==='svariavel')dados[curMes].variavel=rm(dados[curMes].variavel);
+  else if(t==='soutros')dados[curMes].outros=rm(dados[curMes].outros);
+  else if(t==='inv')dados[curMes].investimentos=rm(dados[curMes].investimentos);
+  salvar();renderAll();
+}
+function addE(){dados[curMes].entradas.push({id:uid(),nome:'',valor:0,obs:''});salvar();renderEntradas();
+  // foca no último campo adicionado
+  setTimeout(function(){var rows=document.querySelectorAll('#pageWrap .tbl-row');var last=rows[rows.length-1];if(last){var inp=last.querySelector('input');if(inp)inp.focus()}},50);
+}
+function addS(t){
+  dados[curMes][t].push({id:uid(),nome:'',valor:0,obs:''});salvar();renderSaidas();
+  setTimeout(function(){var rows=document.querySelectorAll('#pageWrap .tbl-row');var last=rows[rows.length-1];if(last){var inp=last.querySelector('input');if(inp)inp.focus()}},50);
+}
+function addInv(){
+  dados[curMes].investimentos.push({id:uid(),nome:'',valor:0,local:'',obs:''});salvar();renderInvestimentos();
+  setTimeout(function(){var rows=document.querySelectorAll('#pageWrap .tbl-row');var last=rows[rows.length-1];if(last){var inp=last.querySelector('input');if(inp)inp.focus()}},50);
+}
+
+// ── EXPORT PDF ──
+function exportCat(cat){
+  salvarCamposAtivos();
+  var d=dados[curMes],titulo='',linhas='';
+  var cab='CONTROLE FINANCEIRO PESSOAL\nNome: '+perfil.nome+'\nGerado em: '+new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})+'\n\n';
+  function bloco(arr,label){
+    var t=0,ls=label+' — '+MESES[curMes]+' 2025\n'+'─'.repeat(62)+'\n';
+    ls+='Nome'.padEnd(28)+'Observação'.padEnd(22)+'Valor\n'+'─'.repeat(62)+'\n';
+    (arr||[]).forEach(function(x){ls+=(x.nome||'—').padEnd(28)+(x.obs||'—').padEnd(22)+fmt(x.valor)+'\n';t+=x.valor});
+    ls+='\n'+'─'.repeat(62)+'\nTOTAL: '+fmt(t)+'\n';
+    return ls;
+  }
+  if(cat==='entradas'){titulo='Entradas';linhas=bloco(d.entradas,'ENTRADAS')}
+  else if(cat==='fixa'){titulo='Contas Fixas';linhas=bloco(d.fixa,'CONTAS FIXAS')}
+  else if(cat==='variavel'){titulo='Contas Variáveis';linhas=bloco(d.variavel,'CONTAS VARIÁVEIS')}
+  else if(cat==='outros'){titulo='Outros Gastos';linhas=bloco(d.outros,'OUTROS GASTOS')}
+  else if(cat==='investimentos'){
+    titulo='Investimentos';var t2=0;
+    linhas='INVESTIMENTOS — '+MESES[curMes]+' 2025\n'+'─'.repeat(72)+'\n';
+    linhas+='Nome'.padEnd(22)+'Onde está'.padEnd(18)+'Observação'.padEnd(18)+'Valor\n'+'─'.repeat(72)+'\n';
+    (d.investimentos||[]).forEach(function(x){linhas+=(x.nome||'—').padEnd(22)+(x.local||'—').padEnd(18)+(x.obs||'—').padEnd(18)+fmt(x.valor)+'\n';t2+=x.valor});
+    linhas+='\n'+'─'.repeat(72)+'\nTOTAL: '+fmt(t2)+'\n';
+  }
+  else if(cat==='anual'){
+    titulo='Relatório Anual 2025';
+    linhas='RELATÓRIO ANUAL 2025\n'+'─'.repeat(82)+'\n';
+    linhas+='Mês               Entradas         Saídas           Invest.          Saldo\n'+'─'.repeat(82)+'\n';
+    var sE=0,sS=0,sI=0;
+    MESES.forEach(function(m,i){
+      var te=totalE(i),ts=totalS(i),ti=totalI(i),sl=te-ts;
+      sE+=te;sS+=ts;sI+=ti;
+      linhas+=(m+'                ').slice(0,18)+(fmt(te)+'                ').slice(0,17)+(fmt(ts)+'                ').slice(0,17)+(fmt(ti)+'                ').slice(0,17)+fmt(sl)+'\n';
+    });
+    linhas+='\n'+'─'.repeat(82)+'\nTOTAL ENTRADAS:  '+fmt(sE)+'\nTOTAL SAÍDAS:    '+fmt(sS)+'\nTOTAL INVEST.:   '+fmt(sI)+'\nSALDO ANUAL:     '+fmt(sE-sS)+'\n';
+  }
+  var mt=d.meta,sl2=sld(curMes),alc=Math.max(0,sl2);
+  var mpct=mt.valor>0?Math.min(100,Math.round(alc/mt.valor*100)):0;
+  if(cat!=='anual')linhas+='\n'+mt.descricao.toUpperCase()+'\nMeta: '+fmt(mt.valor||0)+' | Alcançado: '+fmt(alc)+' | Progresso: '+mpct+'%\n';
+  var w=window.open('','_blank','width=820,height=900');
+  if(!w){showToast('Permita pop-ups para exportar PDF.');return}
+  w.document.write('<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>'+titulo+'</title><style>*{box-sizing:border-box}body{font-family:Arial,sans-serif;padding:40px;font-size:12px;line-height:1.7;background:#fff;color:#111;max-width:900px;margin:0 auto}h1{font-size:18px;font-weight:700;color:#0f1117;margin-bottom:3px}h2{font-size:12px;font-weight:400;color:#666;margin-bottom:20px}pre{white-space:pre-wrap;font-family:\'Courier New\',monospace;font-size:12px;background:#f8f8f8;padding:20px;border-radius:6px;border:1px solid #e0e0e0}.btn{font-family:Arial;padding:10px 24px;background:#0f1117;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;margin-top:20px;font-weight:700}@media print{.btn{display:none}}</style></head><body>');
+  w.document.write('<h1>'+titulo+'</h1><h2>'+perfil.nome+' · '+new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})+'</h2><pre>'+cab+linhas+'</pre><button class="btn" onclick="window.print()">Imprimir / Salvar como PDF</button></body></html>');
+  w.document.close();w.focus();
+}
+
+// ── TOAST ──
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.style.opacity='1';
+  clearTimeout(t._t);t._t=setTimeout(function(){t.style.opacity='0'},2500);
+}
+
+// ── INIT ──
+(function(){
+  var ok=carregar();
+  if(ok&&perfil.nome){garantirMeses();mostrarApp();}
+})();
+
+
+// ── COPIAR MESES ──
+function abrirCopiar(){
+  salvarCamposAtivos();
+  document.getElementById('copiarMesOrigem').textContent=MESES[curMes];
+  // Renderizar checkboxes de meses destino
+  var cont=document.getElementById('mesesDestino');
+  cont.innerHTML='';
+  MESES.forEach(function(m,i){
+    if(i===curMes)return; // pula o mês atual
+    var lbl=document.createElement('label');
+    lbl.style.cssText='display:flex;align-items:center;gap:6px;background:#1e2336;border-radius:8px;padding:8px 10px;cursor:pointer;border:0.5px solid rgba(255,255,255,0.07);font-size:12px;color:#f0f2f8;font-weight:500';
+    lbl.innerHTML='<input type="checkbox" data-mes="'+i+'" style="accent-color:#4d9ef5;cursor:pointer;width:14px;height:14px"> '+MESES_ABR[i];
+    cont.appendChild(lbl);
+  });
+  document.getElementById('copiarModal').classList.add('show');
+}
+function fecharCopiar(){document.getElementById('copiarModal').classList.remove('show')}
+
+function executarCopia(){
+  var origem=curMes;
+  var copiarEntradas=document.getElementById('chkEntradas').checked;
+  var copiarFixa=document.getElementById('chkFixa').checked;
+  var copiarVariavel=document.getElementById('chkVariavel').checked;
+  var copiarOutros=document.getElementById('chkOutros').checked;
+  var copiarInv=document.getElementById('chkInv').checked;
+  var copiarDiv=document.getElementById('chkDiv').checked;
+  var comValores=document.getElementById('modoTudo').checked;
+
+  // Quais meses foram selecionados
+  var destinos=[];
+  document.querySelectorAll('#mesesDestino input[type=checkbox]:checked').forEach(function(chk){
+    destinos.push(parseInt(chk.dataset.mes));
+  });
+
+  if(destinos.length===0){showToast('Selecione pelo menos um mês de destino.');return}
+
+  var nenhum=!copiarEntradas&&!copiarFixa&&!copiarVariavel&&!copiarOutros&&!copiarInv&&!copiarDiv;
+  if(nenhum){showToast('Selecione pelo menos um tipo de dado para copiar.');return}
+
+  function clonarArr(arr){
+    return (arr||[]).map(function(it){
+      var novo=Object.assign({},it,{id:uid()});
+      if(!comValores)novo.valor=0;
+      return novo;
+    });
+  }
+
+  destinos.forEach(function(i){
+    if(copiarEntradas)dados[i].entradas=clonarArr(dados[origem].entradas);
+    if(copiarFixa)dados[i].fixa=clonarArr(dados[origem].fixa);
+    if(copiarVariavel)dados[i].variavel=clonarArr(dados[origem].variavel);
+    if(copiarOutros)dados[i].outros=clonarArr(dados[origem].outros);
+    if(copiarInv)dados[i].investimentos=clonarArr(dados[origem].investimentos);
+    if(copiarDiv)dados[i].div=Object.assign({},dados[origem].div);
+  });
+
+  salvar();
+  fecharCopiar();
+  var msg='Copiado de '+MESES[origem]+' para: '+destinos.map(function(i){return MESES_ABR[i]}).join(', ')+'!';
+  showToast(msg);
+  renderAll();
+}
+
+// ── PWA INSTALL ──
+var deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();deferredPrompt=e;
+  var btn=document.getElementById('installBtn');
+  if(btn){btn.style.display='flex';}
+});
+window.addEventListener('appinstalled',function(){
+  var btn=document.getElementById('installBtn');
+  if(btn)btn.style.display='none';
+  showToast('App instalado com sucesso! Procure o ícone na área de trabalho.');
+});
+function instalarApp(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(r){
+      if(r.outcome==='accepted')showToast('Instalando...');
+      deferredPrompt=null;
+    });
+  }
+}
+// Service Worker inline para ativar PWA
+if('serviceWorker' in navigator){
+  var swCode=[
+    "var CACHE='cfp-cache-v1';",
+    "self.addEventListener('install',function(e){self.skipWaiting();});",
+    "self.addEventListener('activate',function(e){e.waitUntil(clients.claim());});",
+    "self.addEventListener('fetch',function(e){e.respondWith(fetch(e.request).catch(function(){return caches.match(e.request);}));});"
+  ].join('\n');
+  var swBlob=new Blob([swCode],{type:'application/javascript'});
+  var swUrl=URL.createObjectURL(swBlob);
+  navigator.serviceWorker.register(swUrl,{scope:'./'}).catch(function(err){console.log('SW:',err);});
+}
+</script>
+</body>
+</html>
